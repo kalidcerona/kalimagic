@@ -7,9 +7,9 @@
 
   var APP_CATALOG = Object.freeze([
     Object.freeze({ id: 'calc', name: '히츠젠(HITSUZEN)', path: '/tools/hitsuzen/', legacy: true }),
-    Object.freeze({ id: 'stopwatch', name: '카이로스(KAIROS)', path: '/tools/kairos-classic/', legacy: true }),
+    Object.freeze({ id: 'stopwatch', name: '카이로스(KAIROS) 스톱워치', path: '/tools/kairos-classic/', legacy: true }),
     Object.freeze({ id: 'unlock', name: '레리즈(RELEASE)', path: '/tools/release/', legacy: false }),
-    Object.freeze({ id: 'stopwatch-uni', name: '카이로스(KAIROS)', path: '/tools/kairos/', legacy: false }),
+    Object.freeze({ id: 'stopwatch-uni', name: '카이로스(KAIROS) 통합 루틴 타이머', path: '/tools/kairos/', legacy: false }),
     Object.freeze({ id: 'aletheia', name: '알레테이아(ALETHEIA)', path: '/tools/aletheia/', legacy: false }),
     Object.freeze({ id: 'usotsuki', name: '우소츠키(USOTSUKI)', path: '/tools/usotsuki/', legacy: false }),
     Object.freeze({ id: 'tobira', name: '토비라(TOBIRA)', path: '/tools/tobira/', legacy: false }),
@@ -28,9 +28,9 @@
   ]);
   var TOOL_LABELS = Object.freeze({
     calc: '히츠젠(HITSUZEN)',
-    stopwatch: '카이로스(KAIROS)',
+    stopwatch: '카이로스(KAIROS) 스톱워치',
     unlock: '레리즈(RELEASE)',
-    'stopwatch-uni': '카이로스(KAIROS)',
+    'stopwatch-uni': '카이로스(KAIROS) 통합 루틴 타이머',
     aletheia: '알레테이아(ALETHEIA)',
     usotsuki: '우소츠키(USOTSUKI)',
     tobira: '토비라(TOBIRA)',
@@ -46,7 +46,7 @@
     asrai: '아스라이',
     alter: 'ALTER',
     uramichi: 'URAMICHI',
-    all: '히츠젠(HITSUZEN) + 카이로스(KAIROS)'
+    all: '히츠젠(HITSUZEN) + 카이로스(KAIROS) 스톱워치'
   });
   var LEGACY_TOOLS = Object.freeze(['calc', 'stopwatch']);
 

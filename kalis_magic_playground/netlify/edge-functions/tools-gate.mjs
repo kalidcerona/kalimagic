@@ -317,11 +317,11 @@ export default async function toolsGate(request, context) {
   if (!secret) return loginRedirect(request, tool, path.pathname);
 
   const nowMs = Date.now();
-  const gate = await verifyGateCookie(
-    cookieValue(request, gateCookieName(tool)),
-    secret,
-    nowMs
-  );
+  const values = [cookieValue(request, gateCookieName(tool))];
+  if (tool === 'calc' || tool === 'stopwatch') values.push(cookieValue(request, 'kali_tool_gate'));
+  const gates = await Promise.all(values.map((value) => verifyGateCookie(value, secret, nowMs)));
+  const gate = gates.find((candidate) => candidate.valid && (candidate.tool === tool ||
+    (!FRIEND_APP_TOOLS.has(tool) && candidate.tool === 'all'))) || { valid: false };
   if (gate.valid && (gate.tool === tool ||
       (!FRIEND_APP_TOOLS.has(tool) && gate.tool === 'all'))) {
     if (STRICT_DISTRIBUTION_TOOLS.has(tool) &&

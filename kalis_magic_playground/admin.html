@@ -20,22 +20,20 @@
   <main class="admin-apps-shell">
     <header class="admin-apps-header">
       <div class="admin-apps-header__topline">
-        <p class="admin-apps-eyebrow"><span aria-hidden="true"></span> PRIVATE WORKSPACE</p>
         <a class="admin-community-link" href="admin-community.html">커뮤니티 관리 <span aria-hidden="true">↗</span></a>
       </div>
       <h1>앱 권한 관리</h1>
-      <p class="admin-apps-intro">회원별 이용 앱을 확인하고, 여러 앱의 접근 권한을 한 번에 관리합니다.</p>
+      <p class="admin-apps-intro">한 계정의 앱 권한을 추가하고, 신청과 보유 권한을 확인하세요.</p>
       <div class="admin-apps-auth" data-auth-panel aria-live="polite"></div>
     </header>
 
-    <section class="admin-app-catalog" aria-labelledby="admin-app-catalog-title">
-      <div class="admin-section-heading">
-        <div>
-          <p class="admin-section-kicker">DISTRIBUTION</p>
-          <h2 id="admin-app-catalog-title">배포 앱</h2>
-        </div>
-        <p>링크를 복사해 앱을 공유하세요.</p>
+    <section class="admin-access-section" aria-label="이용 권한">
+      <div class="admin-access-panel" data-tools-root aria-busy="true">
+        <p class="admin-loading" role="status">관리자 세션을 확인하고 있습니다.</p>
       </div>
+    </section>
+    <details class="admin-app-catalog" id="admin-distribution">
+      <summary class="admin-catalog-summary"><span>배포 링크</span><span class="admin-catalog-summary__hint">앱 열기 · 주소 복사</span></summary>
       <div class="admin-app-grid">
         <article class="admin-app-card" data-app-card="calc">
           <div class="admin-app-card__icon" aria-hidden="true">∑</div>
@@ -187,20 +185,8 @@
           <div class="admin-app-card__link-row"><code>…/tools/planbcafe/</code><button type="button" class="admin-copy-link" data-copy-link="/tools/planbcafe/" aria-label="플랜비 카페 배포 링크 복사">복사</button></div>
         </article>
       </div>
-    </section>
+    </details>
 
-    <section class="admin-access-section" aria-labelledby="admin-access-title">
-      <div class="admin-section-heading admin-section-heading--access">
-        <div>
-          <p class="admin-section-kicker">ACCESS CONTROL</p>
-          <h2 id="admin-access-title">이용 권한</h2>
-        </div>
-        <p>신청을 확인하고 계정별 앱 권한을 관리합니다.</p>
-      </div>
-      <div class="admin-access-panel" data-tools-root aria-live="polite" aria-busy="true">
-        <p class="admin-loading" role="status">관리자 세션을 확인하고 있습니다.</p>
-      </div>
-    </section>
   </main>
 
   <script src="pg-util.js" defer></script>

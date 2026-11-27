@@ -44,7 +44,7 @@ function harness(rows, availability = { legacy: true, friendApps: true }) {
     adminToolLabel: (id) => id,
     renderBatchToolbar() {},
     submitMemberBatch: (...args) => submitted.push(args),
-    state: { pendingTools: new Map(), selected: new Set(), tab: 'pending', busy: false },
+    state: { pendingTools: new Map(), selected: new Set(), tab: 'pending', batch: true, busy: false },
     makeLifetime: () => ({ input: new Node('input'), label: new Node('label') }),
     textInput: () => Object.assign(new Node('input'), { value: '' })
   });
@@ -66,27 +66,13 @@ function choices(card) { return card.querySelector('fieldset').querySelectorAll(
 function choose(input, checked = true) { input.checked = checked; input.fire('change'); }
 function plain(value) { return JSON.parse(JSON.stringify(value)); }
 
-test('pending member approves only explicitly checked requested apps through pending eligibility', () => {
-  const view = harness([
-    { id: 'a', email: 'member@example.com', tool: 'unlock' },
-    { id: 'b', email: 'member@example.com', tool: 'aletheia' }
-  ]);
-  const card = view.cards[0];
-  const inputs = choices(card);
-  const form = card.querySelector('form');
-  const submit = form.querySelector('button');
+test('pending batch selection sends only explicitly chosen apps', () => {
+  const view = harness([{ id: 'a', email: 'member@example.com', tool: 'unlock' }, { id: 'b', email: 'member@example.com', tool: 'aletheia' }]);
+  const inputs = choices(view.cards[0]);
   assert.equal(inputs.every((input) => !input.checked), true);
-  assert.equal(submit.disabled, true);
-  form.fire('submit');
-  assert.equal(view.submitted.length, 0);
+  view.context.state.selected.add('member@example.com');
   choose(inputs.find((input) => input.value === 'aletheia'));
-  assert.equal(submit.disabled, false);
-  form.fire('submit');
-  assert.deepEqual(plain(view.submitted[0].slice(0, 2)), [
-    [{ email: 'member@example.com', tools: ['aletheia'] }], 'pending'
-  ]);
-  choose(inputs.find((input) => input.value === 'aletheia'), false);
-  assert.equal(submit.disabled, true);
+  assert.deepEqual(plain(view.context.batchEntries(view.availability)), [{ email: 'member@example.com', tools: ['aletheia'] }]);
 });
 
 test('multi-member approval preserves each member app selection and excludes stale or unselected apps', () => {
@@ -109,18 +95,18 @@ test('multi-member approval preserves each member app selection and excludes sta
   assert.deepEqual(plain(view.context.batchEntries({ legacy: true, friendApps: false })), []);
 });
 
-test('legacy all request links only its two legacy app choices in both directions', () => {
+test('legacy all request permits independent app choices', () => {
   const view = harness([
     { id: 'a', email: 'member@example.com', tool: 'all' },
     { id: 'b', email: 'member@example.com', tool: 'unlock' }
   ]);
   const inputs = choices(view.cards[0]);
   choose(inputs.find((input) => input.value === 'stopwatch'));
-  assert.deepEqual(inputs.filter((input) => input.checked).map((input) => input.value), ['calc', 'stopwatch']);
+  assert.deepEqual(inputs.filter((input) => input.checked).map((input) => input.value), ['stopwatch']);
   choose(inputs.find((input) => input.value === 'unlock'));
   choose(inputs.find((input) => input.value === 'calc'), false);
-  assert.deepEqual(inputs.filter((input) => input.checked).map((input) => input.value), ['unlock']);
-  assert.deepEqual(Array.from(view.context.state.pendingTools.get('member@example.com')), ['unlock']);
+  assert.deepEqual(inputs.filter((input) => input.checked).map((input) => input.value), ['stopwatch', 'unlock']);
+  assert.deepEqual(Array.from(view.context.state.pendingTools.get('member@example.com')), ['stopwatch', 'unlock']);
 });
 
 test('new friend apps are separate pending checkbox choices with their existing entitlement IDs', () => {
@@ -131,6 +117,6 @@ test('new friend apps are separate pending checkbox choices with their existing 
   const inputs = choices(view.cards[0]);
   assert.deepEqual(inputs.map((input) => input.value), ['tobira', 'spinner']);
   choose(inputs.find((input) => input.value === 'spinner'));
-  view.cards[0].querySelector('form').fire('submit');
-  assert.deepEqual(plain(view.submitted[0][0]), [{ email: 'member@example.com', tools: ['spinner'] }]);
+  view.context.state.selected.add('member@example.com');
+  assert.deepEqual(plain(view.context.batchEntries(view.availability)), [{ email: 'member@example.com', tools: ['spinner'] }]);
 });

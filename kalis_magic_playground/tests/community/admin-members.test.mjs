@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import {
   changeMemberRole,
   escapeIlikePattern,
+  listMembers,
   shapeMember,
   validateRoleChange
 } from '../../netlify/functions/admin-members.mjs';
@@ -184,4 +185,18 @@ test('changeMemberRole returns role_change_conflict when guarded update changes 
   assert.equal(callsInclude(updateQuery, ['neq', 'role', 'kali']), true);
   assert.equal(callsInclude(updateQuery, ['neq', 'user_id', viewer.userId]), true);
   assert.equal(callsInclude(updateQuery, ['select', 'user_id,role']), true);
+});
+
+test('member grant link resolves only the selected email after UUID validation', async () => {
+  const id = '00000000-0000-4000-8000-000000000001';
+  const calls = [];
+  const supabase = { auth: { admin: { async getUserById(userId) {
+    calls.push(userId);
+    return { data: { user: { email: 'member@example.test', id } } };
+  } } } };
+  const lookup = userId => listMembers({ queryStringParameters: { userId } }, supabase);
+  assert.equal((await lookup('invalid')).statusCode, 400);
+  assert.deepEqual(calls, []);
+  assert.deepEqual(JSON.parse((await lookup(id)).body), { email: 'member@example.test' });
+  assert.deepEqual(calls, [id]);
 });

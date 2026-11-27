@@ -302,12 +302,15 @@ for (const tool of ['aletheia', 'bell', 'slot']) {
         update(value) { operation = 'update'; patch = value; return this; },
         delete() { operation = 'delete'; return this; },
         eq(key, value) { filters.push([key, value]); return this; },
-        async select() {
+        select() { return this; },
+        limit() { return this; },
+        async maybeSingle() { const result = await this; return { ...result, data: result.data[0] || null }; },
+        then(resolve) {
           const matches = filters.every(([key, value]) => row[key] === value);
-          if (!matches) return { data: [], error: null };
+          if (!matches) return Promise.resolve({ data: [], error: null }).then(resolve);
           if (operation === 'update') Object.assign(row, patch);
           if (operation === 'delete') row.deleted = true;
-          return { data: [{ id }], error: null };
+          return Promise.resolve({ data: [{ id }], error: null }).then(resolve);
         }
       };
     } };

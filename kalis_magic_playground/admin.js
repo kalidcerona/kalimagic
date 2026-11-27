@@ -125,6 +125,35 @@
     return button;
   }
 
+  function deletePostButton(item, card, feedback) {
+    var button = el('button', 'playground-button playground-button--ghost admin-post-delete', '삭제');
+    button.type = 'button';
+    button.addEventListener('click', async function () {
+      if (button.disabled) return;
+      var title = item.title || item.id;
+      if (!await window.PgUtil.confirmAction('「' + title + '」 글을 삭제할까요?', '글 삭제')) return;
+      button.disabled = true;
+      try {
+        await fetchJson('/.netlify/functions/admin-moderate', {
+          method: 'POST', body: JSON.stringify({ action: 'delete', postId: item.id })
+        });
+        Object.keys(viewCache).forEach(function (key) {
+          if (!viewCache[key].items) return;
+          viewCache[key].items = viewCache[key].items.filter(function (row) { return row.id !== item.id; });
+          beginViewRequest(key);
+        });
+        clear(card);
+        var result = el('p', 'playground-form-status', '「' + title + '」 글을 삭제했습니다.');
+        result.setAttribute('role', 'status');
+        card.appendChild(result);
+      } catch (error) {
+        feedback.textContent = error.message || '글을 삭제하지 못했습니다. 다시 시도해주세요.';
+        button.disabled = false;
+      }
+    });
+    return button;
+  }
+
   function answerButton(item, slot) {
     var button = el('button', 'playground-button playground-button--ghost', '답변 작성');
     button.type = 'button';
@@ -302,9 +331,12 @@
       if (state.filter === 'magazine_candidates') actions.appendChild(magazinePublishButton(item, answerSlot));
       actions.appendChild(actionButton('숨김', 'hide', item.id));
       actions.appendChild(actionButton('복구', 'restore', item.id));
-      actions.appendChild(actionButton('삭제', 'delete', item.id));
+      var feedback = el('p', 'playground-form-status is-error');
+      feedback.setAttribute('role', 'alert');
+      actions.appendChild(deletePostButton(item, card, feedback));
       actions.appendChild(actionButton('매거진 후보', 'mark_magazine_candidate', item.id));
       card.appendChild(actions);
+      card.appendChild(feedback);
       card.appendChild(answerSlot);
       listEl.appendChild(card);
     });
@@ -481,7 +513,7 @@
       actions.appendChild(memberGodButton(member, card));
     }
     var appLink = el('a', 'playground-button playground-button--ghost', '앱 권한 관리');
-    appLink.href = 'admin.html';
+    appLink.href = member.userId ? 'admin.html?member=' + encodeURIComponent(member.userId) : 'admin.html';
     actions.appendChild(appLink);
     card.appendChild(actions);
     var status = el('p', 'playground-form-status');

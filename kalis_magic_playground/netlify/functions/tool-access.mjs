@@ -1,3 +1,4 @@
+import { legacyAccessForTool, mutateLegacyAccess } from './_lib/legacy-app-access.mjs';
 import { bearerToken, requireViewer } from './_lib/auth.mjs';
 import { json, readJsonBody } from './_lib/http.mjs';
 import { getSupabaseAdmin } from './_lib/supabase.mjs';
@@ -10,6 +11,10 @@ const REQUESTABLE_TOOLS = new Set(['stopwatch', 'calc', ...FRIEND_APP_TOOLS]);
 // 순수 분기 판정: 조회한 행 + 요청한 도구 → 무엇을 할지.
 export function decideAccess(row, tool) {
   if (!row) return 'create';
+  if (row.per_app_access != null) {
+    const grant = legacyAccessForTool(row, tool);
+    return !grant ? 'deny' : grant.status === 'approved' ? 'allow' : 'pending';
+  }
   if (row.status !== 'approved') return 'pending';
   return row.tool === tool || row.tool === 'all' ? 'allow' : 'deny';
 }
@@ -39,7 +44,7 @@ function escapeIlikePattern(value) {
 }
 
 async function findAccess(supabase, userId, email) {
-  const columns = 'id,user_id,email,tool,lifetime,status,display_name,nickname';
+  const columns = '*';
   const { data: userIdAccess, error: userIdError } = await supabase
     .from('tool_access')
     .select(columns)
@@ -91,7 +96,7 @@ async function syncAccessIdentity(supabase, access, userId, email) {
   try {
     duplicateResult = await supabase
       .from('tool_access')
-      .select('id,status,tool,lifetime')
+      .select('*')
       .ilike('email', escapeIlikePattern(email))
       .neq('id', access.id)
       .limit(1)
@@ -102,6 +107,8 @@ async function syncAccessIdentity(supabase, access, userId, email) {
   const duplicate = duplicateResult.data;
   if (duplicateResult.error || !duplicate) return;
 
+  // Split grants must never be merged/deleted by the old best-effort identity path.
+  if (access.per_app_access != null || duplicate.per_app_access != null) return;
   const inheritancePatch = duplicateInheritancePatch(access, duplicate);
   if (inheritancePatch) {
     let inheritanceResult;
@@ -256,20 +263,12 @@ export async function handler(event) {
 
     const decision = decideAccess(access, tool);
 
-    if (decision === 'create') {
-      const { error: insertError } = await supabase
-        .from('tool_access')
-        .insert({
-          user_id: viewer.userId,
-          email,
-          status: 'pending',
-          tool: null,
-          display_name: displayName,
-          nickname,
-          requested_at: new Date().toISOString()
-        });
-      // 23505 = 동시에 두 번 신청한 경우. 이미 행이 있으니 그대로 대기 응답.
-      if (insertError && insertError.code !== '23505') return json(500, { error: 'db_error' });
+    if (decision === 'create' || decision === 'deny' ||
+        (decision === 'pending' && access?.tool && !legacyAccessForTool(access, tool))) {
+      const result = await mutateLegacyAccess(supabase, {
+        email, userId: viewer.userId, tool, action: 'request', displayName, nickname
+      });
+      if (result.error) return json(500, { error: 'db_error' });
       return json(403, { error: 'pending', status: 'pending' });
     }
 
@@ -285,7 +284,7 @@ export async function handler(event) {
 
     if (decision === 'deny') return json(403, { error: 'not_allowed' });
 
-    return await issueGateCookie(email, tool, access, secret);
+    return await issueGateCookie(email, tool, legacyAccessForTool(access, tool) || access, secret);
   } catch {
     return json(500, { error: 'db_error' });
   }

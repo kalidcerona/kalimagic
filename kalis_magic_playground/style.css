@@ -3585,3 +3585,21 @@ button.mypage-badge-tile:hover,
 
 .member-mobile-footer { padding: 1rem 1rem 6rem; text-align: center; background: #1a0f0a; color: #e6d4c4; }
 .member-mobile-footer a { display: inline-block; padding: .65rem .3rem; color: inherit; text-decoration: underline; }
+
+.admin-confirm {
+  box-sizing: border-box;
+  width: min(30rem, calc(100% - 2rem));
+  max-height: 85dvh;
+  padding: 1.5rem;
+  margin: auto;
+  border: 1px solid var(--border-light);
+  border-radius: 1rem;
+  background: var(--bg-alt);
+  color: var(--text-main);
+  overscroll-behavior: contain;
+}
+.admin-confirm::backdrop { background: rgb(0 0 0 / 65%); }
+.admin-confirm h2 { margin: 0; font-size: 1.2rem; }
+.admin-confirm__details { margin: .75rem 0 1.25rem; white-space: pre-line; overflow-wrap: anywhere; }
+.admin-confirm .admin-card__actions { display: flex; justify-content: flex-end; gap: .5rem; }
+.admin-card .admin-post-delete { color: #ffb8ae; }

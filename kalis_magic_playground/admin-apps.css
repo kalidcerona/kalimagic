@@ -313,3 +313,76 @@ body.admin-apps-page {
   .admin-button,
   .admin-community-link { transition: none; }
 }
+
+/* Task-first workspace: keep sharing secondary to account access. */
+.admin-apps-page { color-scheme: dark; }
+.admin-apps-page ::selection { color: #151a18; background: var(--admin-gold-bright); }
+.admin-apps-page input { caret-color: var(--admin-gold-bright); }
+.admin-apps-header__topline { justify-content: flex-end; }
+.admin-apps-header h1 { margin-top: 24px; letter-spacing: -.035em; }
+.admin-access-section { padding-top: 26px; }
+.admin-grant-form > label[for="admin-grant-note"], .admin-grant-form > p { grid-column: 1 / -1; }
+.admin-access-panel { padding: 20px; }
+.admin-view-tabs { gap: 8px; }
+.admin-view-tab { min-height: 44px; padding: 0 18px; font-size: 14px; }
+.admin-grant-card { grid-template-columns: minmax(170px, .55fr) minmax(0, 1.7fr); padding: 24px; gap: 32px; }
+.admin-grant-card__heading h3 { font-size: 19px; }
+.admin-grant-card__heading p { font-size: 13px; line-height: 1.7; }
+.admin-grant-form { gap: 16px 12px; }
+.admin-grant-form .admin-tool-choices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px 12px; padding: 12px; }
+.admin-grant-form .admin-tool-choices legend { margin-bottom: 4px; }
+.admin-grant-form .admin-checkbox { min-height: 42px; line-height: 1.45; }
+.admin-grant-form .admin-checkbox input { flex-shrink: 0; }
+.admin-button { min-height: 42px; line-height: 1.5; padding: 8px 13px; }
+.admin-field input, .admin-field select, .admin-list-filters input, .admin-list-filters select { min-height: 44px; }
+.admin-field__label { font-size: 13px; }
+.admin-grant-summary { grid-column: 1 / -1; margin: 0; padding: 14px 16px; border: 1px solid rgba(216, 189, 121, .28); border-radius: 8px; color: #e8dec0; background: rgba(216, 189, 121, .07); font-size: 13px; line-height: 1.7; overflow-wrap: anywhere; }
+.admin-owned-list { grid-column: 1 / -1; margin: 0; color: #b6bcb2; font-size: 13px; line-height: 1.7; }
+.admin-owned-list > p { margin: 8px 0; }
+.admin-access-panel details { margin-block: 14px; }
+.admin-access-panel summary { min-height: 44px; padding: 10px 12px; box-sizing: border-box; color: #d2d3c9; font-size: 13px; cursor: pointer; }
+.admin-access-panel details[open] > summary { margin-bottom: 10px; }
+.admin-access-card__note { border-left: 0; border: 1px solid var(--admin-line); border-radius: 7px; }
+.admin-action-status { font-size: 13px; line-height: 1.65; overflow-wrap: anywhere; }
+.admin-app-catalog { margin-top: 28px; padding-top: 0; border-block: 1px solid var(--admin-line); }
+.admin-catalog-summary { padding: 20px 0; cursor: pointer; color: #e2e0d6; font-size: 15px; font-weight: 600; }
+.admin-catalog-summary::marker { color: var(--admin-gold); }
+.admin-catalog-summary__hint { margin-left: 16px; color: #a6aaa3; font-size: 12px; font-weight: 400; }
+.admin-app-catalog .admin-app-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 24px; padding-bottom: 16px; }
+.admin-app-catalog .admin-app-card { grid-template-columns: minmax(0, 1fr) 44px; gap: 8px; padding: 16px 0; border: 0; border-top: 1px solid var(--admin-line); border-radius: 0; background: none; box-shadow: none; }
+.admin-app-catalog .admin-app-card:hover { transform: none; }
+.admin-app-catalog .admin-app-card__icon { display: none; }
+.admin-app-catalog .admin-app-card__copy h3 { white-space: normal; overflow-wrap: anywhere; line-height: 1.45; }
+.admin-app-catalog .admin-app-card__open { width: 42px; height: 42px; }
+.admin-app-catalog .admin-app-card__link-row { margin: 0; padding: 0; border: 0; }
+.admin-copy-link { min-height: 40px; min-width: 48px; font-size: 12px; }
+
+@media (max-width: 900px) {
+  .admin-grant-card { grid-template-columns: 1fr; gap: 20px; }
+  .admin-grant-card__heading p { max-width: none; }
+}
+@media (max-width: 560px) {
+  .admin-apps-shell { padding-top: 20px; }
+  .admin-apps-header { padding-bottom: 18px; }
+  .admin-apps-header h1 { margin-top: 20px; font-size: 32px; }
+  .admin-apps-auth { margin-top: 14px; }
+  .admin-access-section { padding-top: 20px; }
+  .admin-section-heading--access > p { display: none; }
+  .admin-access-panel { padding: 10px; }
+  .admin-view-tabs { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 3px; }
+  .admin-view-tab { flex-wrap: wrap; gap: 4px; min-height: 48px; padding: 7px 4px; font-size: 12px; }
+  .admin-grant-card { margin: 14px 0; padding: 14px 10px; gap: 16px; }
+  .admin-grant-form .admin-tool-choices { grid-template-columns: 1fr; padding: 10px; gap: 0; }
+  .admin-grant-form .admin-tool-choices .admin-checkbox { font-size: 13px; }
+  .admin-grant-summary { padding: 12px; }
+  .admin-app-catalog .admin-app-grid { grid-template-columns: 1fr; }
+  .admin-catalog-summary__hint { margin-left: 8px; }
+  .admin-member-app-row__info { flex-basis: 100%; }
+}
+
+.admin-grant-workspace > h3 { margin: 2px 0 0; font-size: 19px; letter-spacing: -.025em; line-height: 1.5; }
+.admin-grant-selection { grid-column: 1 / -1; min-width: 0; }
+.admin-grant-selection > .admin-button { margin: 0 8px 12px 0; }
+.admin-owned-section { margin-top: 24px; padding-top: 4px; }
+.admin-owned-section > h4 { margin: 0 0 12px; color: #c8c9c1; font-size: 13px; font-weight: 600; }
+.admin-owned-section .admin-member-app-row { align-items: flex-start; }

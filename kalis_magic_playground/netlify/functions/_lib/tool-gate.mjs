@@ -5,6 +5,8 @@ const VALID_TOOLS = new Set(['stopwatch', 'calc', 'unlock', 'stopwatch-uni', 'al
 const VALID_KINDS = new Set(['std', 'life']);
 
 export function gateCookieName(tool) {
+  if (tool === 'calc') return 'kali_calc_gate';
+  if (tool === 'stopwatch') return 'kali_stopwatch_gate';
   if (tool === 'unlock') return 'kali_unlock_gate';
   if (tool === 'stopwatch-uni') return 'kali_stopwatch_uni_gate';
   if (tool === 'aletheia') return 'kali_aletheia_gate';

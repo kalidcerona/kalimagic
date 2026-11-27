@@ -32,7 +32,15 @@ export function shapeMember(row) {
   };
 }
 
-async function listMembers(event, supabase) {
+export async function listMembers(event, supabase) {
+  const userId = event.queryStringParameters?.userId;
+  if (userId !== undefined) {
+    if (!validateUuid(userId)) return json(400, { error: 'invalid_user_id' });
+    const { data, error } = await supabase.auth.admin.getUserById(userId);
+    if (error && error.status !== 404) return json(500, { error: 'member_lookup_failed' });
+    if (!data?.user?.email) return json(404, { error: 'member_email_unavailable' });
+    return json(200, { email: data.user.email });
+  }
   const q = clean(event.queryStringParameters?.q);
   let query = supabase
     .from('profiles')

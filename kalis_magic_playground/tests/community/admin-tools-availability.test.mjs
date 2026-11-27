@@ -222,7 +222,7 @@ test('a missing access row returns 404 for both legacy and friend app revocation
     const supabase = {
       from(table) {
         assert.equal(table, expectedTable);
-        return { delete() { return this; }, eq() { return this; }, select: async () => ({ data: [], error: null }) };
+        return { delete() { return this; }, eq() { return this; }, limit() { return this; }, select() { return this; }, maybeSingle: async () => ({ data: null, error: null }), then(resolve) { return Promise.resolve({ data: [], error: null }).then(resolve); } };
       }
     };
     const result = response(await adminTools.deleteToolAccess({ queryStringParameters: {

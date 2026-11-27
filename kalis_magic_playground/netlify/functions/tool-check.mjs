@@ -1,3 +1,4 @@
+import { legacyAccessForTool } from './_lib/legacy-app-access.mjs';
 import { json, readJsonBody } from './_lib/http.mjs';
 import { getSupabaseAdmin } from './_lib/supabase.mjs';
 import { gateCookieName, verifyGateCookie } from './_lib/tool-gate.mjs';
@@ -31,14 +32,18 @@ function gateCookieValues(event) {
   const requestedTool = event.queryStringParameters?.tool || null;
   const cookieName = gateCookieName(requestedTool);
   const values = [];
+  const legacyValues = [];
   for (const part of header.split(';')) {
     const separator = part.indexOf('=');
     if (separator === -1) continue;
     if (part.slice(0, separator).trim() === cookieName) {
       values.push(part.slice(separator + 1).trim());
+    } else if (['calc', 'stopwatch'].includes(requestedTool) &&
+        part.slice(0, separator).trim() === 'kali_tool_gate') {
+      legacyValues.push(part.slice(separator + 1).trim());
     }
   }
-  if (values.length) return values;
+  if (values.length || legacyValues.length) return [...values, ...legacyValues];
   try {
     const body = readJsonBody(event);
     return body?.cookie ? [String(body.cookie)] : [];
@@ -61,18 +66,23 @@ export async function handler(event) {
   try {
     let query = getSupabaseAdmin()
       .from(FRIEND_APP_TOOLS.has(gate.tool) ? 'friend_app_access' : 'tool_access')
-      .select('tool,status')
-      .eq('email', gate.email);
+      .select('*')
+      .ilike('email', gate.email.replace(/[\\%_]/g, '\\$&'));
     if (FRIEND_APP_TOOLS.has(gate.tool)) query = query.eq('tool', gate.tool);
     const { data: row, error } = await query.limit(1).maybeSingle();
     // Legacy performance tools remain fail-open; friend distribution fails closed.
     if (error) return json(200, { ok: allowOnCheckError(gate.tool) });
 
-    const allowed =
-      row?.status === 'approved' && (row.tool === gate.tool || row.tool === 'all');
+    const selectedTool = requestedTool || gate.tool;
+    const selected = row?.per_app_access != null
+      ? selectedTool === 'all'
+        ? ['calc', 'stopwatch'].every((tool) => legacyAccessForTool(row, tool)?.status === 'approved')
+        : legacyAccessForTool(row, selectedTool)?.status === 'approved'
+      : row?.status === 'approved' && (row.tool === selectedTool || row.tool === 'all');
+    const allowed = Boolean(selected);
     return allowed
       ? json(200, { ok: true })
-      : json(200, { ok: false, reason: 'revoked' }, { 'Set-Cookie': clearGateCookie(gate.tool) });
+      : json(200, { ok: false, reason: 'revoked' }, requestedTool && gate.tool === 'all' ? {} : { 'Set-Cookie': clearGateCookie(gate.tool) });
   } catch {
     return json(200, { ok: allowOnCheckError(gate.tool) });
   }

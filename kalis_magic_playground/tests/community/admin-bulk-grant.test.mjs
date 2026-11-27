@@ -1,35 +1,10 @@
+import { accessDatabase as fakeDb } from './legacy-access-fixture.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { handler, postToolAccess } from '../../netlify/functions/admin-tools.mjs';
 
 const viewer = { userId: '00000000-0000-4000-8000-000000000001' };
 const email = 'member@example.com';
-
-function fakeDb(initial = {}, failedTool = '') {
-  const rows = { tool_access: [...(initial.tool_access || [])], friend_app_access: [...(initial.friend_app_access || [])] };
-  let reads = 0;
-  let writes = 0;
-  return { rows, get reads() { return reads; }, get writes() { return writes; }, from(table) {
-    const filters = [];
-    const query = {
-      select() { return this; },
-      ilike(key, value) { filters.push([key, value.toLowerCase()]); return this; },
-      eq(key, value) { filters.push([key, value]); return this; },
-      update(patch) { this.patch = patch; this.mode = 'update'; return this; },
-      insert(patch) { this.patch = patch; this.mode = 'insert'; return this; },
-      then(resolve) {
-        reads += this.mode ? 0 : 1;
-        writes += this.mode ? 1 : 0;
-        const matches = rows[table].filter((row) => filters.every(([key, value]) => String(row[key] || '').toLowerCase() === String(value).toLowerCase()));
-        if (this.mode && this.patch.tool === failedTool) return Promise.resolve({ data: null, error: { code: 'db_error' } }).then(resolve);
-        if (this.mode === 'update') matches.forEach((row) => Object.assign(row, this.patch));
-        if (this.mode === 'insert') rows[table].push({ id: `new-${rows[table].length}`, ...this.patch });
-        return Promise.resolve({ data: this.mode === 'insert' ? [rows[table].at(-1)] : matches, error: null }).then(resolve);
-      }
-    };
-    return query;
-  } };
-}
 
 async function grant(db, tools, extra = {}) {
   const response = await postToolAccess({ body: JSON.stringify({ action: 'grantBulk', email, tools, ...extra }) }, viewer, db);
@@ -83,19 +58,15 @@ test('member batch rejects duplicate email, invalid app and more than 25 account
   assert.equal(db.reads, 0);
 });
 
-test('a pending legacy all request cannot be reduced to one app by either bulk path', async () => {
+test('a pending legacy all request approves each app independently', async () => {
   const db = fakeDb({ tool_access: [{ id: 'both', email, tool: 'all', status: 'pending', note: 'request both' }] });
   const single = await grant(db, ['calc']);
-  assert.deepEqual(single.body.results, [{ tool: 'calc', outcome: 'failed', error: 'partial_legacy_request' }]);
+  assert.deepEqual(single.body.results, [{ tool: 'calc', outcome: 'granted' }]);
+  assert.equal(db.rows.tool_access[0].per_app_access.stopwatch.status, 'pending');
   const memberBatch = await grantMembers(db, 'pending', [{ email, tools: ['stopwatch'] }]);
-  assert.deepEqual(memberBatch.body.results[0].results, [{ tool: 'stopwatch', outcome: 'failed', error: 'partial_legacy_request' }]);
-  assert.equal(db.writes, 0);
-  assert.equal(db.rows.tool_access[0].tool, 'all');
-  assert.equal(db.rows.tool_access[0].status, 'pending');
-  const both = await grantMembers(db, 'pending', [{ email, tools: ['calc', 'stopwatch'] }]);
-  assert.deepEqual(both.body.results[0].results.map((item) => item.outcome), ['granted', 'granted']);
-  assert.equal(db.rows.tool_access[0].tool, 'all');
-  assert.equal(db.rows.tool_access[0].status, 'approved');
+  assert.deepEqual(memberBatch.body.results[0].results, [{ tool: 'stopwatch', outcome: 'granted' }]);
+  assert.equal(db.rows.tool_access[0].per_app_access.calc.status, 'approved');
+  assert.equal(db.rows.tool_access[0].per_app_access.stopwatch.status, 'approved');
 });
 
 test('bulk grant preserves legacy all, lifetime and note, and is idempotent', async () => {
@@ -104,7 +75,8 @@ test('bulk grant preserves legacy all, lifetime and note, and is idempotent', as
   assert.equal(first.status, 200);
   assert.deepEqual(first.body.results.map((item) => item.outcome), ['alreadyGranted', 'granted', 'granted']);
   assert.equal(db.rows.tool_access[0].tool, 'all');
-  assert.equal(db.rows.tool_access[0].lifetime, true);
+  assert.equal(db.rows.tool_access[0].per_app_access.calc.lifetime, true);
+  assert.equal(db.rows.tool_access[0].per_app_access.stopwatch.lifetime, false);
   assert.equal(db.rows.tool_access[0].note, 'keep');
   assert.equal(db.rows.friend_app_access.length, 1);
   const retry = await grant(db, ['stopwatch', 'unlock']);
@@ -113,14 +85,15 @@ test('bulk grant preserves legacy all, lifetime and note, and is idempotent', as
   assert.equal(first.headers['cache-control'], 'no-store');
 });
 
-test('two legacy apps on one pending row are approved with one write and retain both entitlements', async () => {
+test('two legacy apps on one pending row retain separate entitlements', async () => {
   const db = fakeDb({ tool_access: [{ id: 'pending-1', email, tool: 'calc', status: 'pending', lifetime: true, note: 'request note' }] });
   const response = await grant(db, ['calc', 'stopwatch']);
   assert.deepEqual(response.body.results.map((item) => item.outcome), ['granted', 'granted']);
-  assert.equal(db.writes, 1);
+  assert.equal(db.writes, 2);
   assert.equal(db.rows.tool_access[0].tool, 'all');
   assert.equal(db.rows.tool_access[0].status, 'approved');
-  assert.equal(db.rows.tool_access[0].lifetime, true);
+  assert.equal(db.rows.tool_access[0].per_app_access.calc.lifetime, false);
+  assert.equal(db.rows.tool_access[0].per_app_access.stopwatch.lifetime, false);
   assert.equal(db.rows.tool_access[0].note, 'request note');
 });
 
@@ -135,7 +108,7 @@ test('reversed bulk selection and friend request approve all requested apps', as
   assert.equal(db.rows.tool_access[0].tool, 'all');
   assert.equal(db.rows.friend_app_access[0].status, 'approved');
   assert.equal(db.rows.friend_app_access[0].lifetime, true);
-  assert.equal(db.writes, 2);
+  assert.equal(db.writes, 3);
 });
 
 test('bulk grant returns per-app failures without discarding successful apps', async () => {

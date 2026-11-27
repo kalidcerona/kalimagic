@@ -390,6 +390,7 @@ test('permission POST updates one access row locally and a reopened tab does not
   const context = vm.createContext({
     console,
     URL,
+    URLSearchParams,
     document: documentFor(rootEl),
     navigator: { clipboard: null },
     location: { origin: 'https://example.test', href: 'https://example.test/admin.html' },
@@ -421,8 +422,8 @@ test('permission POST updates one access row locally and a reopened tab does not
     assert.equal(calls.length, 1);
     calls[0].resolve(structuredClone(payload));
     await flush();
-    assert.match(tools.textContent, /wait@example.com/);
-    const approvedTab = tools.querySelectorAll('button').find((button) => button.textContent.includes('승인 완료'));
+    assert.match(tools.textContent, /한 계정에 권한 주기/);
+    const approvedTab = tools.querySelectorAll('button').find((button) => button.textContent.includes('권한 찾기'));
     click(approvedTab);
     await flush();
     const background = calls.at(-1);
@@ -434,13 +435,13 @@ test('permission POST updates one access row locally and a reopened tab does not
     await flush();
     assert.equal(tools.querySelectorAll('h3').find((node) => node.textContent === 'done@example.com'), heading);
 
-    const pendingTab = tools.querySelectorAll('button').find((button) => button.textContent.includes('승인 대기'));
+    const pendingTab = tools.querySelectorAll('button').find((button) => button.textContent.includes('신청 보기'));
     click(pendingTab);
     await flush();
     calls.at(-1).resolve(structuredClone(payload));
     await flush();
     const getsBeforePost = calls.filter((call) => call.method === 'GET').length;
-    const approve = tools.querySelectorAll('button').find((button) => button.textContent === '승인');
+    const approve = tools.querySelectorAll('button').find((button) => button.textContent === '신청대로 승인');
     const card = approve.closest('.admin-access-card');
     click(approve);
     await flush();
@@ -457,7 +458,35 @@ test('permission POST updates one access row locally and a reopened tab does not
     calls.at(-1).resolve({ ok: true });
     await flush();
     assert.equal(calls.filter((call) => call.method === 'GET').length, getsBeforePost);
-    assert.equal(tools.textContent.includes('wait@example.com'), false);
+    assert.match(tools.textContent, /wait@example.com.*처리 완료/);
+
+    // A late changed GET must retain drafts but exclude newly owned choices.
+    click(tools.querySelectorAll('button').find((node) => node.textContent === '권한 주기'));
+    await flush();
+    const late = calls.at(-1);
+    let email = tools.querySelectorAll('input').find((node) => node.name === 'email');
+    email.value = 'draft@example.test';
+    email.listeners.input.forEach((fn) => fn());
+    click(tools.querySelectorAll('button').find((node) => node.textContent === '추가할 수 있는 앱 모두 선택'));
+    const note = tools.querySelectorAll('input').find((node) => node.name === 'note');
+    note.value = 'keep this note';
+    note.listeners.input.forEach((fn) => fn());
+    const lifetime = tools.querySelectorAll('input').find((node) => node.name === 'lifetime');
+    lifetime.checked = true;
+    lifetime.listeners.change.forEach((fn) => fn());
+    const changed = structuredClone(payload);
+    changed.approved.push({ id: 'new', email: 'draft@example.test', tool: 'bell', lifetime: false });
+    late.resolve(changed);
+    await flush();
+    email = tools.querySelectorAll('input').find((node) => node.name === 'email');
+    assert.equal(email.value, 'draft@example.test');
+    assert.equal(tools.querySelectorAll('input').find((node) => node.name === 'note').value, 'keep this note');
+    assert.equal(tools.querySelectorAll('input').find((node) => node.name === 'lifetime').checked, true);
+    const checked = tools.querySelectorAll('input').filter((node) => node.name === 'tools' && node.checked);
+    assert.equal(checked.length, 18);
+    assert.equal(checked.some((node) => node.value === 'bell'), false);
+    assert.match(tools.textContent, /새로 보유하거나/);
+
   } finally {
     process.off('unhandledRejection', onRejection);
   }

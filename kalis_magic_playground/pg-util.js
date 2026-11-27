@@ -24,6 +24,33 @@
     return data;
   }
 
+  function confirmAction(message, confirmLabel) {
+    var dialog = el('dialog', 'admin-confirm');
+    if (typeof dialog.showModal !== 'function') return Promise.resolve(window.confirm(message));
+    var title = el('h2', '', confirmLabel);
+    var details = el('p', 'admin-confirm__details', message);
+    var form = el('form', 'admin-card__actions');
+    form.method = 'dialog';
+    var cancel = el('button', 'playground-button playground-button--ghost', '취소');
+    cancel.value = 'cancel';
+    cancel.autofocus = true;
+    var confirm = el('button', 'playground-button', confirmLabel);
+    confirm.value = 'confirm';
+    form.append(cancel, confirm);
+    dialog.setAttribute('aria-label', confirmLabel);
+    details.id = 'admin-confirm-details';
+    dialog.setAttribute('aria-describedby', details.id);
+    dialog.append(title, details, form);
+    document.body.appendChild(dialog);
+    return new Promise(function (resolve) {
+      dialog.addEventListener('close', function () {
+        dialog.remove();
+        resolve(dialog.returnValue === 'confirm');
+      }, { once: true });
+      dialog.showModal();
+    });
+  }
+
   function escapeHtml(value) {
     return String(value || '')
       .replaceAll('&', '&amp;')
@@ -59,6 +86,7 @@
     el: el,
     clear: clear,
     fetchJson: fetchJson,
+    confirmAction: confirmAction,
     escapeHtml: escapeHtml,
     formatDate: formatDate
   };

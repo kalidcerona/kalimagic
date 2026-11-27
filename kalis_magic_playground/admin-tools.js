@@ -10,7 +10,7 @@
   var clear = window.PgUtil.clear;
   var fetchJson = window.PgUtil.fetchJson;
   var endpoint = '/.netlify/functions/admin-tools';
-  var state = { data: null, members: { pending: [], approved: [] }, tab: 'pending', query: '', tool: '*', loadError: '', selected: new Set(), pendingTools: new Map(), batchTools: new Set(), batchLifetime: false, busy: false };
+  var state = { data: null, members: { pending: [], approved: [] }, tab: 'grant', batch: false, draftTouched: false, requestDrafts: new Map(), draft: { email: '', tools: [], note: '', lifetime: false }, query: '', tool: '*', loadError: '', selected: new Set(), pendingTools: new Map(), batchTools: new Set(), batchLifetime: false, busy: false };
   var permissionRefreshEpoch = 0;
   var MAX_BATCH_MEMBERS = 25;
 
@@ -119,7 +119,7 @@
       state.data = data;
       state.members.pending = model.groupMembers(data.pending);
       state.members.approved = model.groupMembers(data.approved);
-      var currentEmails = new Set(state.members[state.tab].map(function (member) { return member.email; }));
+      var currentEmails = new Set((state.members[state.tab] || []).map(function (member) { return member.email; }));
       state.selected.forEach(function (email) { if (!currentEmails.has(email)) state.selected.delete(email); });
       state.loadError = '';
       if (!unchanged) render();
@@ -171,7 +171,7 @@
     if (tabCounts[0]) tabCounts[0].textContent = String(state.members.pending.length);
     if (tabCounts[1]) tabCounts[1].textContent = String(state.members.approved.length);
     var heading = root.querySelector('.admin-list-heading .admin-list-total');
-    if (heading) heading.textContent = state.members[state.tab].length + '개 계정';
+    if (heading) heading.textContent = (state.members[state.tab] || []).length + '개 계정';
   }
 
   function replaceAccessCard(email, control) {
@@ -194,9 +194,9 @@
   function applyLocalPermissionRow(change, control) {
     if (!state.data || !change || !change.item) return false;
     if (change.action === 'approve') {
-      var current = state.data.pending.find(function (row) { return row.id === change.item.id; });
+      var current = state.data.pending.find(function (row) { return row.id === change.item.id && row.tool === change.item.tool; });
       if (!current) return false;
-      state.data.pending = state.data.pending.filter(function (row) { return row.id !== change.item.id; });
+      state.data.pending = state.data.pending.filter(function (row) { return !(row.id === change.item.id && row.tool === change.item.tool); });
       state.data.approved = state.data.approved.concat([Object.assign({}, current, {
         tool: change.tool,
         lifetime: Boolean(change.lifetime),
@@ -205,11 +205,11 @@
       })]);
     } else if (change.action === 'reject') {
       var pendingBefore = state.data.pending.length;
-      state.data.pending = state.data.pending.filter(function (row) { return row.id !== change.item.id; });
+      state.data.pending = state.data.pending.filter(function (row) { return !(row.id === change.item.id && row.tool === change.item.tool); });
       if (state.data.pending.length === pendingBefore) return false;
     } else if (change.action === 'revoke') {
       var approvedBefore = state.data.approved.length;
-      state.data.approved = state.data.approved.filter(function (row) { return row.id !== change.item.id; });
+      state.data.approved = state.data.approved.filter(function (row) { return !(row.id === change.item.id && row.tool === change.item.tool); });
       if (state.data.approved.length === approvedBefore) return false;
     } else return false;
     // Drop an in-flight list GET so it cannot paint over the row just updated locally.
@@ -219,22 +219,44 @@
   }
 
   async function runMutation(status, control, busyMessage, run) {
+    var resultKey = status.getAttribute('data-row-result');
+    var oldCard = control.closest('.admin-access-card');
+    var listBefore = root.querySelector('[data-access-list]');
+    var resultIndex = oldCard && listBefore ? Array.prototype.indexOf.call(listBefore.children, oldCard) : 0;
     status.classList.remove('is-error', 'is-success');
     status.textContent = busyMessage;
+    if (state.busy) return;
+    state.busy = true;
     control.disabled = true;
     var result;
     try {
       result = await run();
+      state.busy = false;
     } catch (error) {
+      state.busy = false;
       var message = actionError(error);
       if (message) setStatus(status, message, true);
       if (error.status !== 403) control.disabled = false;
       return;
     }
 
-    if (result && result.localRow && applyLocalPermissionRow(result.localRow, control)) return;
+    if (result && result.localRow && applyLocalPermissionRow(result.localRow, control)) {
+      var feedback = root.querySelector('[data-access-list]');
+      if (feedback) {
+        var message = el('p', 'admin-action-status is-success', result.localRow.item.email + ' · ' + adminToolLabel(result.localRow.tool || result.localRow.item.tool) + ' 처리 완료');
+        message.setAttribute('role', 'status');
+        if (feedback.insertBefore) feedback.insertBefore(message, feedback.children[resultIndex] || null);
+        else feedback.appendChild(message);
+      }
+      return;
+    }
 
     var updated = await refresh(true);
+    if (updated && resultKey) {
+      Array.prototype.forEach.call(root.querySelectorAll('[data-row-result]'), function (node) {
+        if (node.getAttribute('data-row-result') === resultKey) setStatus(node, '평생 권한으로 변경했습니다.', false);
+      });
+    }
     if (!updated && state.data) {
       var mutationScope = control.closest('.admin-access-card, .admin-grant-card');
       if (mutationScope) {
@@ -279,12 +301,14 @@
     tabs.setAttribute('role', 'tablist');
     tabs.setAttribute('aria-label', '권한 목록 상태');
     [
-      { id: 'pending', label: '승인 대기', count: pending },
-      { id: 'approved', label: '승인 완료', count: approved }
+      { id: 'grant', label: '권한 주기', count: '' },
+      { id: 'pending', label: '신청 보기', count: pending },
+      { id: 'approved', label: '권한 찾기', count: approved }
     ].forEach(function (tab) {
       var control = button('', 'admin-view-tab' + (state.tab === tab.id ? ' is-active' : ''), function () {
         clearSelection();
         state.tab = tab.id;
+        state.batch = false;
         render();
         refresh(true);
       });
@@ -292,7 +316,7 @@
       control.setAttribute('aria-selected', state.tab === tab.id ? 'true' : 'false');
       control.appendChild(document.createTextNode(tab.label));
       var count = el('span', 'admin-view-tab__count', String(tab.count));
-      control.appendChild(count);
+      if (tab.count !== '') control.appendChild(count);
       tabs.appendChild(control);
     });
     return tabs;
@@ -380,11 +404,18 @@
     }).filter(function (member) { return member.tools.length; });
   }
 
+  function confirmGrant(entries, lifetime) {
+    var accounts = entries.map(function (entry) {
+      return entry.email + ': ' + entry.tools.map(adminToolLabel).join(', ');
+    });
+    return window.PgUtil.confirmAction(accounts.join('\n') + '\n기간: ' + (lifetime ? '평생' : '3개월') + '\n권한을 저장할까요?', '권한 저장');
+  }
+
   async function submitMemberBatch(entries, mode, lifetime, note, trigger) {
     if (state.busy || !entries.length || entries.length > MAX_BATCH_MEMBERS) return;
     state.busy = true;
     trigger.disabled = true;
-    var notice = root.querySelector('[data-refresh-error]');
+    var notice = root.querySelector('[data-batch-result]');
     setStatus(notice, '계정별 앱 권한을 저장하고 있습니다.', false);
     try {
       var response = await fetchJson(endpoint, { method: 'POST', body: JSON.stringify({
@@ -397,31 +428,34 @@
       var failed = results.map(function (member) {
         return { email: member.email, results: member.results.filter(function (item) { return item.outcome === 'failed'; }) };
       }).filter(function (member) { return member.results.length; });
-      var completed = results.reduce(function (count, member) { return count + member.results.length; }, 0) - failed.reduce(function (count, member) { return count + member.results.length; }, 0);
+      var completed = results.reduce(function (count, member) { return count + member.results.filter(function (item) { return item.outcome === 'granted'; }).length; }, 0);
+      var existing = results.reduce(function (count, member) { return count + member.results.filter(function (item) { return item.outcome !== 'granted' && item.outcome !== 'failed'; }).length; }, 0);
       clearSelection();
+      state.busy = false;
       var updated = await refresh(true);
-      if (!updated) return;
-      notice = root.querySelector('[data-refresh-error]');
+      if (!updated) { setStatus(notice, '저장은 완료됐지만 목록 확인에 실패했습니다.', true); notice.appendChild(button('저장 결과 다시 확인', 'admin-button', function () { refresh(true); })); return; }
+      render();
+      notice = root.querySelector('[data-batch-result]');
       if (failed.length) {
         var failures = failed.reduce(function (count, member) { return count + member.results.length; }, 0);
         var details = failed.map(function (member) {
           return member.email + ' (' + member.results.map(function (item) { return adminToolLabel(item.tool); }).join(', ') + ')';
         }).join('; ');
-        var needsPair = failed.some(function (member) { return member.results.some(function (item) { return item.error === 'partial_legacy_request'; }); });
-        setStatus(notice, completed + '건 처리, ' + failures + '건 실패: ' + details + '. ' +
-          (needsPair ? '히츠젠(HITSUZEN)+카이로스(KAIROS) 일괄 신청은 두 앱을 함께 선택해야 합니다. ' : '') + '목록을 확인해 주세요.', true);
+        setStatus(notice, completed + '개 새로 부여 · ' + existing + '개 이미 보유 · ' + failures + '건 실패: ' + details + '. 목록을 확인해 주세요.', true);
         var retryable = failed.map(function (member) {
-          return { email: member.email, tools: member.results.filter(function (item) { return item.error !== 'not_eligible' && item.error !== 'partial_legacy_request'; }).map(function (item) { return item.tool; }) };
+          return { email: member.email, tools: member.results.filter(function (item) { return item.error !== 'not_eligible'; }).map(function (item) { return item.tool; }) };
         }).filter(function (member) { return member.tools.length; });
         if (retryable.length) {
-          var retry = button('일시적 실패 재시도', 'admin-button admin-button--quiet', function () {
-            submitMemberBatch(retryable, mode, lifetime, note, retry);
+          var retry = button('일시적 실패 재시도', 'admin-button admin-button--quiet', async function () {
+            var retryLifetime = state.batchLifetime;
+            if (await confirmGrant(retryable, retryLifetime)) submitMemberBatch(retryable, mode, retryLifetime, note, retry);
           });
           notice.appendChild(document.createTextNode(' '));
           notice.appendChild(retry);
         }
-      } else setStatus(notice, completed + '건의 계정별 앱 권한을 처리했습니다.', false);
+      } else setStatus(notice, completed + '개 새로 부여 · ' + existing + '개 이미 보유', false);
     } catch (error) {
+      state.busy = false;
       var message = actionError(error);
       if (message) setStatus(notice, message, true);
       if (error.status !== 403) trigger.disabled = false;
@@ -433,6 +467,7 @@
   function renderBatchToolbar() {
     var host = root.querySelector('[data-batch-toolbar]');
     if (!host || !state.data) return;
+    if (!state.batch) { clear(host); return; }
     clear(host);
     var availability = model.availabilityFromResponse(state.data);
     var visible = visibleMembers().filter(function (member) {
@@ -465,86 +500,124 @@
     lifetime.input.checked = state.batchLifetime;
     lifetime.input.addEventListener('change', function () { state.batchLifetime = lifetime.input.checked; });
     host.appendChild(lifetime.label);
-    var submit = button(state.tab === 'pending' ? '선택 계정의 선택 앱 승인' : '선택 계정에 앱 추가', 'admin-button admin-button--gold', function () {
-      if (!window.confirm(entries.length + '명에게 총 ' + appCount + '개 앱 권한을 ' + (state.tab === 'pending' ? '신청 내용대로 승인' : '추가') + '할까요?')) return;
+    var submit = button(state.tab === 'pending' ? '선택 계정의 선택 앱 승인' : '선택 계정에 앱 추가', 'admin-button admin-button--gold', async function () {
+      if (!await confirmGrant(entries, lifetime.input.checked)) return;
       submitMemberBatch(entries, state.tab, lifetime.input.checked, '', submit);
     });
     submit.disabled = !appCount || state.busy;
     host.appendChild(submit);
+    var result = el('p', 'admin-action-status');
+    result.setAttribute('data-batch-result', '');
+    result.setAttribute('role', 'status');
+    host.appendChild(result);
   }
 
   async function grantBulk(email, tools, lifetime, note, status, submit) {
-    if (!tools.length) {
-      setStatus(status, '앱을 하나 이상 선택해 주세요.', true);
-      return;
-    }
+    if (state.busy || !tools.length) return;
+    state.busy = true;
     submit.disabled = true;
     setStatus(status, '선택한 앱 권한을 저장하고 있습니다.', false);
     try {
-      var response = await fetchJson(endpoint, { method: 'POST', body: JSON.stringify({
-        action: 'grantBulk', email: email, tools: tools, lifetime: lifetime, note: note
-      }) });
+      var response = await fetchJson(endpoint, { method: 'POST', body: JSON.stringify({ action: 'grantBulk', email: email, tools: tools, lifetime: lifetime, note: note }) });
       var results = response.results || [];
-      if (results.length !== tools.length) throw new Error('권한 저장 결과를 확인할 수 없습니다. 목록을 새로고침해 주세요.');
+      if (results.length !== tools.length) throw new Error('저장 결과를 확인할 수 없습니다. 목록을 다시 확인해 주세요.');
       var failed = results.filter(function (entry) { return entry.outcome === 'failed'; }).map(function (entry) { return entry.tool; });
-      var partialLegacy = results.some(function (entry) { return entry.error === 'partial_legacy_request'; });
+      state.draft.tools = failed;
+      state.draft.lifetime = false;
+      state.busy = false;
       var updated = await refresh(true);
-      if (!updated) return;
-      var notice = root.querySelector('[data-refresh-error]');
-      if (failed.length) {
-        setStatus(notice, (tools.length - failed.length) + '개 처리 완료, ' + failed.length + '개 실패. ' +
-          (partialLegacy ? '기존 히츠젠(HITSUZEN)+카이로스(KAIROS) 신청은 두 앱을 함께 선택해야 합니다.' : '실패한 앱만 다시 시도할 수 있습니다.'), true);
-        if (!partialLegacy) {
-          var retry = button('실패한 앱 재시도', 'admin-button admin-button--quiet', function () {
-            grantBulk(email, failed, lifetime, note, notice, retry);
-          });
-          notice.appendChild(document.createTextNode(' '));
-          notice.appendChild(retry);
-        }
-      } else {
-        setStatus(notice, results.filter(function (entry) { return entry.outcome === 'granted'; }).length + '개 앱 권한을 추가했습니다.', false);
-      }
+      if (updated) render();
+      var notice = root.querySelector('[data-grant-result]') || status;
+      setStatus(notice, results.filter(function (entry) { return entry.outcome === 'granted'; }).length + '개 새로 부여 · ' + results.filter(function (entry) { return entry.outcome !== 'granted' && entry.outcome !== 'failed'; }).length + '개 이미 보유 · ' + failed.length + '개 실패' + (failed.length ? ': ' + failed.map(adminToolLabel).join(', ') : '') + (updated ? '' : ' · 저장 후 목록 확인에 실패했습니다.'), failed.length > 0 || !updated);
+      if (failed.length) notice.appendChild(button('실패한 앱 재시도', 'admin-button', async function () {
+        var retryLifetime = state.draft.lifetime;
+        if (await confirmGrant([{ email: email, tools: failed }], retryLifetime)) grantBulk(email, failed, retryLifetime, note, notice, this);
+      }));
+      if (!updated) notice.appendChild(button('저장 결과 다시 확인', 'admin-button', function () { refresh(true); }));
     } catch (error) {
+      state.busy = false;
       var message = actionError(error);
       if (message) setStatus(status, message, true);
-      if (error.status !== 403) submit.disabled = false;
+    } finally {
+      state.busy = false;
+      submit.disabled = false;
     }
   }
 
   function addForm(availability) {
-    var card = el('section', 'admin-grant-card');
-    card.setAttribute('aria-labelledby', 'admin-grant-title');
-    var heading = el('div', 'admin-grant-card__heading');
-    heading.appendChild(el('span', 'admin-card-kicker', 'NEW ACCESS'));
-    heading.appendChild(el('h3', '', '앱 권한 추가'));
-    heading.appendChild(el('p', '', '이메일 주소와 여러 앱을 선택해 한 번에 권한을 부여합니다.'));
-    card.appendChild(heading);
+    var card = el('section', 'admin-grant-card admin-grant-workspace');
+    card.appendChild(el('h3', '', '한 계정에 권한 주기'));
     var form = el('form', 'admin-grant-form');
+    var draft = state.draft;
     var email = textInput('email', 'email', 'name@example.com', true);
+    email.value = draft.email;
     email.autocomplete = 'email';
-    form.appendChild(labeledControl('Google 계정 이메일', email, 'admin-grant-email'));
-    var options = availableOptions(availability, false).map(function (entry) { return entry.value; });
-    var checks = toolChecks(options);
-    form.appendChild(checks);
-    var note = textInput('text', 'note', '예: 구매 확인, 초대 대상', false);
-    form.appendChild(labeledControl('메모 (선택)', note, 'admin-grant-note'));
-    var lifetime = makeLifetime();
-    form.appendChild(lifetime.label);
-    var submit = el('button', 'admin-button admin-button--gold', '권한 추가');
-    submit.type = 'submit';
-    form.appendChild(submit);
+    form.appendChild(labeledControl('받을 Google 계정 이메일', email, 'admin-grant-email'));
+    form.appendChild(button('내 계정 사용', 'admin-button admin-button--quiet', async function () {
+      var session = await window.MagicAuth.getSession();
+      if (session && session.user) { state.draftTouched = true; draft.email = session.user.email || ''; draft.tools = []; draft.lifetime = false; render(); }
+    }));
+    var selection = el('div', 'admin-grant-selection');
+    var summary = el('p', 'admin-grant-summary');
     var status = el('p', 'admin-action-status');
     status.setAttribute('role', 'status');
-    form.appendChild(status);
-    form.addEventListener('submit', function (event) {
-      event.preventDefault();
-      grantBulk(email.value.trim(), selectedTools(checks), lifetime.input.checked, note.value.trim(), status, submit);
-    });
-    var unavailable = options.length === 0;
-    if (unavailable) {
-      setAllDisabled(form, true);
-      setStatus(status, '사용할 수 있는 권한 서비스가 없습니다.', true);
+    status.setAttribute('data-grant-result', '');
+    var submit = el('button', 'admin-button admin-button--gold', '권한 주기');
+    submit.type = 'submit';
+    function updateSummary() {
+      summary.textContent = (draft.email || '계정을 입력하세요') + ' · ' + draft.tools.length + '개 앱 · ' + (draft.lifetime ? '평생' : '3개월');
+      submit.textContent = draft.tools.length + '개 앱에 ' + (draft.lifetime ? '평생' : '3개월') + ' 권한 주기';
+      submit.disabled = !draft.email.trim() || !draft.tools.length || state.busy;
     }
+    function drawChoices() {
+      clear(selection);
+      if (!draft.email.trim()) {
+        selection.appendChild(el('p', 'admin-empty', '받을 계정의 이메일을 입력하거나 내 계정 사용을 누르면 추가할 수 있는 앱과 보유 권한이 표시됩니다.'));
+        updateSummary();
+        return;
+      }
+      var options = model.additionalToolOptions({ email: draft.email }, state.data.approved, availability);
+      var previous = draft.tools.length;
+      draft.tools = draft.tools.filter(function (tool) { return options.indexOf(tool) !== -1; });
+      if (previous !== draft.tools.length) setStatus(status, '새로 보유하거나 사용할 수 없게 된 앱은 선택에서 제외했습니다.', false);
+      selection.appendChild(button('추가할 수 있는 앱 모두 선택', 'admin-button admin-button--quiet', function () { draft.tools = options.slice(); drawChoices(); }));
+      selection.appendChild(button('선택 해제', 'admin-button admin-button--quiet', function () { draft.tools = []; drawChoices(); }));
+      var checks = toolChecks(options);
+      Array.prototype.forEach.call(checks.querySelectorAll('input'), function (input) {
+        input.checked = draft.tools.indexOf(input.value) !== -1;
+        input.addEventListener('change', function () { draft.tools = selectedTools(checks); updateSummary(); });
+      });
+      selection.appendChild(checks);
+      var owned = state.data.approved.filter(function (row) { return accessEmailKey(row.email) === accessEmailKey(draft.email); });
+      if (owned.length) {
+        var holdings = el('section', 'admin-owned-section');
+        holdings.appendChild(el('h4', '', '보유 중인 앱 · 기간 변경은 별도 선택'));
+        owned.forEach(function (row) { holdings.appendChild(approvedRow(row, availability)); });
+        selection.appendChild(holdings);
+      }
+      updateSummary();
+    }
+    email.addEventListener('input', function () { setStatus(status, '', false); state.draftTouched = true; draft.email = email.value; draft.tools = []; draft.lifetime = false; lifetime.input.checked = false; drawChoices(); });
+    form.appendChild(selection);
+    var note = textInput('text', 'note', '구매 확인, 초대 대상 등', false);
+    note.value = draft.note;
+    note.addEventListener('input', function () { draft.note = note.value; });
+    form.appendChild(labeledControl('메모 (선택)', note, 'admin-grant-note'));
+    var lifetime = makeLifetime();
+    lifetime.input.checked = draft.lifetime;
+    lifetime.input.addEventListener('change', function () { draft.lifetime = lifetime.input.checked; updateSummary(); });
+    form.appendChild(el('p', '', '기본 기간은 3개월입니다. 평생 권한은 저장할 때마다 직접 선택하세요.'));
+    form.appendChild(lifetime.label);
+    form.appendChild(summary);
+    form.appendChild(submit);
+    form.appendChild(status);
+    form.addEventListener('submit', async function (event) {
+      event.preventDefault();
+      var tools = draft.tools.slice();
+      if (tools.length > 1 && !await window.PgUtil.confirmAction(draft.email + '\n' + tools.map(adminToolLabel).join(', ') + '\n기간: ' + (draft.lifetime ? '평생' : '3개월') + '\n권한을 부여할까요?', '권한 부여')) return;
+      grantBulk(draft.email.trim(), tools, draft.lifetime, draft.note.trim(), status, submit);
+    });
+    drawChoices();
     card.appendChild(form);
     return card;
   }
@@ -562,6 +635,9 @@
   }
 
   function pendingCard(item, availability) {
+    var key = item.id + ':' + (item.tool || '');
+    var saved = state.requestDrafts.get(key) || { tool: item.tool || '', note: '', lifetime: false };
+    state.requestDrafts.set(key, saved);
     var card = el('div', 'admin-pending-row');
     var top = el('div', 'admin-access-card__top');
     top.appendChild(toolBadge(item));
@@ -572,14 +648,19 @@
       return { value: toolId, label: adminToolLabel(toolId) };
     });
     if (!choices.length) choices = [{ value: item.tool || '', label: adminToolLabel(item.tool) }];
-    var tool = selectControl('tool', choices, item.tool || choices[0].value);
+    if (!item.tool) choices.unshift({ value: '', label: '앱을 선택하세요' });
+    var tool = selectControl('tool', choices, saved.tool);
     tool.setAttribute('aria-label', (item.email || '계정') + ' 승인 앱 선택');
     var note = textInput('text', 'note', '승인 메모 (선택)', false);
     note.setAttribute('aria-label', (item.email || '계정') + ' 승인 메모');
+    note.value = saved.note;
+    note.addEventListener('input', function () { saved.note = note.value; });
     var lifetime = makeLifetime();
+    lifetime.input.checked = saved.lifetime;
+    lifetime.input.addEventListener('change', function () { saved.lifetime = lifetime.input.checked; });
     var status = el('p', 'admin-action-status');
     status.setAttribute('role', 'status');
-    var approve = button('승인', 'admin-button admin-button--gold');
+    var approve = button('신청대로 승인', 'admin-button admin-button--gold');
     approve.addEventListener('click', function () {
       runMutation(status, approve, '권한을 승인하고 있습니다.', async function () {
         await fetchJson(endpoint, { method: 'POST', body: JSON.stringify({ action: 'approve', id: item.id, tool: tool.value, lifetime: lifetime.input.checked, note: note.value.trim() }) });
@@ -587,8 +668,8 @@
       });
     });
     var reject = button('요청 삭제', 'admin-button admin-button--quiet');
-    reject.addEventListener('click', function () {
-      if (!window.confirm((item.email || '이 계정') + '의 권한 요청을 삭제할까요?')) return;
+    reject.addEventListener('click', async function () {
+      if (!await window.PgUtil.confirmAction((item.email || '이 계정') + '의 ' + adminToolLabel(item.tool) + ' 권한 요청을 삭제할까요?', '요청 삭제')) return;
       runMutation(status, reject, '요청을 삭제하고 있습니다.', async function () {
         await fetchJson(endpoint + '?id=' + encodeURIComponent(item.id) + '&tool=' + encodeURIComponent(item.tool || ''), { method: 'DELETE' });
         return { localRow: { action: 'reject', item: item } };
@@ -596,20 +677,26 @@
     });
     var isUnavailable = !model.isPendingActionAvailable(item, tool.value, availability);
     if (isUnavailable) {
-      tool.disabled = true;
+      tool.disabled = choices.length < 2;
       approve.disabled = true;
-      reject.disabled = true;
-      setStatus(status, item.tool ? '이 앱의 권한 서비스가 중단되어 승인과 삭제를 잠시 사용할 수 없습니다.' : '히츠젠(HITSUZEN)·카이로스(KAIROS) 권한 서비스가 중단되어 이 기존 요청을 처리할 수 없습니다.', true);
+      reject.disabled = !availability.legacy;
+      setStatus(status, !item.tool && availability.legacy ? '승인할 앱을 먼저 선택하세요.' : item.tool ? '이 앱의 권한 서비스가 중단되어 승인과 삭제를 잠시 사용할 수 없습니다.' : '히츠젠(HITSUZEN)·카이로스(KAIROS) 권한 서비스가 중단되어 이 기존 요청을 처리할 수 없습니다.', true);
     }
     tool.addEventListener('change', function () {
+      saved.tool = tool.value;
       var canAct = model.isPendingActionAvailable(item, tool.value, availability);
       approve.disabled = !canAct;
       reject.disabled = !canAct;
       if (canAct) status.textContent = '';
     });
-    form.appendChild(tool);
-    form.appendChild(note);
-    form.appendChild(lifetime.label);
+    var details = el('details', 'admin-request-options');
+    details.open = !item.tool;
+    details.appendChild(el('summary', '', '내용 변경'));
+    details.appendChild(tool);
+    details.appendChild(note);
+    details.appendChild(lifetime.label);
+    card.appendChild(el('p', '', '기본 승인 · 3개월'));
+    form.appendChild(details);
     form.appendChild(approve);
     form.appendChild(reject);
     card.appendChild(form);
@@ -627,10 +714,11 @@
     row.appendChild(info);
     var status = el('p', 'admin-action-status');
     status.setAttribute('role', 'status');
+    status.setAttribute('data-row-result', item.id + ':' + item.tool);
     var revoke = button('권한 회수', 'admin-button admin-button--quiet');
     revoke.setAttribute('aria-label', (item.email || '계정') + '의 ' + adminToolLabel(item.tool) + ' 권한 회수');
-    revoke.addEventListener('click', function () {
-      if (!window.confirm((item.email || '이 계정') + '의 ' + adminToolLabel(item.tool) + ' 권한을 회수할까요?')) return;
+    revoke.addEventListener('click', async function () {
+      if (!await window.PgUtil.confirmAction((item.email || '이 계정') + '의 ' + adminToolLabel(item.tool) + ' · ' + (item.lifetime ? '평생' : '3개월') + ' 권한을 회수할까요?', '권한 회수')) return;
       runMutation(status, revoke, '권한을 회수하고 있습니다.', async function () {
         await fetchJson(endpoint + '?id=' + encodeURIComponent(item.id) + '&tool=' + encodeURIComponent(item.tool || ''), { method: 'DELETE' });
         return { localRow: { action: 'revoke', item: item } };
@@ -640,6 +728,16 @@
       revoke.disabled = true;
       setStatus(status, '이 앱의 권한 서비스가 중단되어 회수를 잠시 사용할 수 없습니다.', true);
     }
+    if (!item.lifetime) {
+      var convert = button('평생으로 변경', 'admin-button', async function () {
+        if (!await window.PgUtil.confirmAction(item.email + ' · ' + adminToolLabel(item.tool) + '\n3개월 권한을 평생으로 변경할까요?', '평생으로 변경')) return;
+        runMutation(status, convert, '기간을 변경하고 있습니다.', async function () {
+          await fetchJson(endpoint, { method: 'POST', body: JSON.stringify({ action: 'lifetime', id: item.id, tool: item.tool }) });
+        });
+      });
+      convert.disabled = !model.isToolAvailable(item.tool, availability);
+      row.appendChild(convert);
+    }
     row.appendChild(revoke);
     row.appendChild(status);
     return row;
@@ -648,7 +746,7 @@
   function approvedCard(member, availability) {
     var card = el('article', 'admin-access-card');
     var top = el('div', 'admin-access-card__top');
-    top.appendChild(memberSelector(member, availability));
+    if (state.batch) top.appendChild(memberSelector(member, availability));
     var identity = el('div', 'admin-access-card__identity');
     identity.appendChild(el('h3', '', member.email || '이메일 없음'));
     identity.appendChild(el('p', '', personDetails(member)));
@@ -658,42 +756,23 @@
     var portfolio = el('div', 'admin-member-portfolio');
     member.rows.forEach(function (item) { portfolio.appendChild(approvedRow(item, availability)); });
     card.appendChild(portfolio);
-    var availableToAdd = model.missingTools(member, availability);
-    var grantForm = el('form', 'admin-access-card__grant');
-    var checks = toolChecks(availableToAdd);
-    grantForm.appendChild(checks);
-    var grantLifetime = makeLifetime();
-    grantForm.appendChild(grantLifetime.label);
-    var grantButton = el('button', 'admin-button admin-button--gold', '선택한 앱 추가');
-    grantButton.type = 'submit';
-    grantForm.appendChild(grantButton);
-    var grantStatus = el('p', 'admin-action-status');
-    grantStatus.setAttribute('role', 'status');
-    grantForm.appendChild(grantStatus);
-    if (availableToAdd.length) {
-      grantForm.addEventListener('submit', function (event) {
-        event.preventDefault();
-        grantBulk(member.email, selectedTools(checks), grantLifetime.input.checked, '', grantStatus, grantButton);
-      });
-    } else {
-      grantLifetime.input.disabled = true;
-      grantButton.disabled = true;
-      setStatus(grantStatus, '추가할 수 있는 앱 권한이 없습니다.', true);
-    }
-    card.appendChild(grantForm);
+    card.appendChild(button('이 계정에 권한 주기', 'admin-button', function () {
+      state.draft = { email: member.email, tools: [], note: '', lifetime: false };
+      state.tab = 'grant'; render();
+    }));
     return card;
   }
 
   function pendingMemberCard(member, availability) {
     var card = el('article', 'admin-access-card');
-    card.appendChild(memberSelector(member, availability));
+    if (state.batch) card.appendChild(memberSelector(member, availability));
     var identity = el('div', 'admin-access-card__identity');
     identity.appendChild(el('h3', '', member.email || '이메일 없음'));
     identity.appendChild(el('p', '', personDetails(member)));
     card.appendChild(identity);
     var bulkOptions = model.pendingBulkTools(member, availability);
-    if (bulkOptions.length && member.email) {
-      var bulkForm = el('form', 'admin-access-card__grant admin-pending-bulk');
+    if (state.batch && bulkOptions.length && member.email) {
+      var bulkForm = el('div', 'admin-access-card__grant admin-pending-bulk');
       var checks = toolChecks(bulkOptions);
       checks.querySelector('legend').textContent = '신청한 앱 중 승인할 앱 선택';
       checks.setAttribute('aria-label', member.email + ' 승인할 신청 앱');
@@ -706,41 +785,16 @@
         input.checked = saved.has(input.value);
         input.addEventListener('change', function () {
           var checked = input.checked;
-          var pair = model.hasPendingLegacyPair(member) && (input.value === 'calc' || input.value === 'stopwatch');
-          Array.prototype.forEach.call(checks.querySelectorAll('input'), function (choice) {
-            if (!pair && choice !== input) return;
-            if (pair && choice.value !== 'calc' && choice.value !== 'stopwatch') return;
-            choice.checked = checked;
-            if (checked) saved.add(choice.value); else saved.delete(choice.value);
-          });
-          submit.disabled = !selectedTools(checks).length || state.busy;
+          if (checked) saved.add(input.value); else saved.delete(input.value);
           renderBatchToolbar();
         });
       });
       bulkForm.appendChild(checks);
-      if (model.hasPendingLegacyPair(member)) bulkForm.appendChild(el('span', 'admin-batch-toolbar__hint', '히츠젠(HITSUZEN)+카이로스(KAIROS) 일괄 신청은 두 앱을 함께 승인합니다.'));
-      var lifetime = makeLifetime();
-      bulkForm.appendChild(lifetime.label);
-      var note = textInput('text', 'bulkNote', '일괄 승인 메모 (선택)', false);
-      note.setAttribute('aria-label', member.email + ' 일괄 승인 메모');
-      bulkForm.appendChild(note);
-      var submit = el('button', 'admin-button admin-button--gold', '선택한 앱 승인');
-      submit.type = 'submit';
-      submit.disabled = !selectedTools(checks).length || state.busy;
-      bulkForm.appendChild(submit);
-      var status = el('p', 'admin-action-status');
-      status.setAttribute('role', 'status');
-      bulkForm.appendChild(status);
-      bulkForm.addEventListener('submit', function (event) {
-        event.preventDefault();
-        var tools = selectedTools(checks);
-        if (!tools.length) return;
-        submitMemberBatch([{ email: member.email, tools: tools }], 'pending', lifetime.input.checked, note.value.trim(), submit);
-      });
+
       card.appendChild(bulkForm);
     }
     var requests = el('div', 'admin-member-portfolio');
-    member.rows.forEach(function (item) { requests.appendChild(pendingCard(item, availability)); });
+    if (!state.batch) member.rows.forEach(function (item) { requests.appendChild(pendingCard(item, availability)); });
     card.appendChild(requests);
     return card;
   }
@@ -814,9 +868,9 @@
     refreshStatus.setAttribute('role', 'status');
     root.appendChild(refreshStatus);
     root.appendChild(renderTabs());
-    if (state.tab === 'approved') root.appendChild(addForm(availability));
+    if (state.tab === 'grant') { root.appendChild(addForm(availability)); return; }
     var listHead = el('div', 'admin-list-heading');
-    var count = state.members[state.tab].length;
+    var count = (state.members[state.tab] || []).length;
     listHead.appendChild(el('h3', '', (state.tab === 'pending' ? '승인 대기 계정' : '승인된 계정')));
     listHead.appendChild(el('span', 'admin-list-total', count + '개 계정'));
     var refreshButton = button('새로고침', 'admin-button admin-button--quiet', function () {
@@ -829,7 +883,12 @@
     root.appendChild(filtersRow());
     var batchToolbar = el('div', 'admin-batch-toolbar');
     batchToolbar.setAttribute('data-batch-toolbar', '');
-    root.appendChild(batchToolbar);
+    var batchToggle = el('details', 'admin-batch-disclosure');
+    batchToggle.open = state.batch;
+    batchToggle.appendChild(el('summary', '', '여러 회원 처리'));
+    batchToggle.appendChild(batchToolbar);
+    batchToggle.addEventListener('toggle', function () { if (state.batch !== batchToggle.open) { state.batch = batchToggle.open; clearSelection(); renderList(); } });
+    root.appendChild(batchToggle);
     root.appendChild(el('div', 'admin-access-list'));
     root.lastElementChild.setAttribute('data-access-list', '');
     renderList();
@@ -891,6 +950,12 @@
       root.setAttribute('aria-busy', 'true');
       clear(root);
       root.appendChild(el('p', 'admin-loading', '앱 권한을 불러오고 있습니다.'));
+      var requestedEmail = new URLSearchParams(window.location.search).get('email');
+      if (requestedEmail) state.draft.email = requestedEmail;
+      var memberId = new URLSearchParams(window.location.search).get('member');
+      if (memberId && !requestedEmail) fetchJson('/.netlify/functions/admin-members?userId=' + encodeURIComponent(memberId)).then(function (member) {
+        if (!state.draftTouched && !state.draft.email && !state.draft.tools.length && member.email) { state.draft.email = member.email; if (state.data) render(); }
+      }).catch(function () {});
       await refresh(false);
     } catch (error) {
       state.loadError = error.message || '관리자 세션 확인에 실패했습니다.';
