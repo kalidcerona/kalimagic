@@ -51,6 +51,7 @@ try {
   async function checkTier(amount) {
     assert.deepEqual(await landing.locator('.ticket-prices .current .amount').allTextContents(), amount ? [amount] : []);
     assert.equal(await landing.locator('.current .current-marker').count(), amount ? 1 : 0);
+    assert.equal(await landing.locator('.fee-hint').isHidden(), Boolean(amount));
     assert.equal(await landing.locator('.pill-cta.wide').textContent(), '자리 신청하기');
   }
   await landing.clock.install({time:new Date('2026-11-26T00:00:00+09:00')});
@@ -286,6 +287,7 @@ try {
   assert.equal(await page.locator('#photo-consent').isDisabled(), true);
   await page.click('#retry');
   await page.waitForFunction(() => !document.querySelector('#submit').disabled);
+  assert.ok(await page.locator('#signup-banner').isHidden());
   for (const id of ['birth-date','gender-male','discovery-instagram','reason-content']) {
     assert.equal(await page.locator('#'+id).isVisible(), true);
     assert.equal(await page.locator('#'+id).evaluate(input => input.required), true);
@@ -355,11 +357,14 @@ try {
     assert.equal(await page.locator('#availability').getAttribute('aria-live'), 'polite');
     assert.match(await page.locator('#availability').textContent(), ended ? /기간이 끝났어/ : /기다려줘/);
     assert.match(await page.locator('#signup-banner h2').textContent(), ended ? /마감/ : /신청 대기/);
+    assert.ok(await page.locator('#retry').isHidden());
     now = new Date(config.opensAt);
     config.enabled = true;
     store.state.now = now.getTime();
-    await page.click('#retry');
+    await page.reload();
     await page.waitForFunction(() => !document.querySelector('#submit').disabled);
+    await fillApplication();
+    await page.check('#photo-consent');
     assert.equal(await page.textContent('#total'), '50,000원');
   }
   await page.locator('#submit').click();
@@ -474,7 +479,7 @@ try {
   await checkResultSkip('sold-out-title');
   offer = getOffer('2026-12-19T00:00:00+09:00', config);
   await page.reload();
-  await page.waitForFunction(() => !document.querySelector('#retry').disabled);
+  await page.waitForSelector('#signup-banner:visible');
   assert.equal(await page.locator('#submit').isDisabled(), true);
   await capture('closed');
   const mismatched = JSON.parse(saved.value);
@@ -502,7 +507,7 @@ try {
     await page.evaluate(({key,value}) => sessionStorage.setItem(key,value), {key:saved.key,value});
     await page.clock.setFixedTime(clock);
     await page.reload();
-    await page.waitForSelector('#retry:enabled');
+    await page.waitForSelector('#signup-banner:visible');
     assert.ok(await page.locator('#success').isHidden());
     assert.equal(await page.evaluate(key => sessionStorage.getItem(key), saved.key), null);
   }

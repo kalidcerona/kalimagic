@@ -190,43 +190,25 @@ h1 span,
 }
 
 #signup-banner {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 0 1rem;
   margin-bottom: 24px;
   padding: 0 0 16px;
   border-bottom: 1px solid var(--rule);
-  background: transparent;
 }
 
 #signup-banner h2 {
-  grid-column: 1;
   margin: 0 0 2px;
   font-size: 1rem;
 }
 
-#signup-banner h2::before {
-  content: "";
-  display: inline-block;
-  width: .48em;
-  height: .48em;
-  margin-right: .5em;
-  border-radius: 50%;
-  background: var(--hero);
-  vertical-align: .1em;
-}
-
 #availability {
-  grid-column: 1;
   margin: 0;
   color: var(--muted);
   font-size: .875rem;
+  white-space: pre-line;
 }
 
 #retry {
-  grid-row: 1 / 3;
-  grid-column: 2;
+  margin-top: 8px;
   min-height: 44px;
   padding: 6px 12px;
   border: 1px solid var(--edge);
@@ -658,16 +640,6 @@ footer.wrap {
     font-size: .9375rem;
   }
 
-  #signup-banner {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  #retry {
-    grid-row: auto;
-    grid-column: auto;
-    justify-self: start;
-    margin-top: 5px;
-  }
 }
 
 @container (max-width: 260px) {

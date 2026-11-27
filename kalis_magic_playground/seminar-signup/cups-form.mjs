@@ -13,8 +13,15 @@ const closedState = () => offer?.availabilityState || (offer?.nextBoundary === n
 const closedButton = () => ({scheduled:'접수 준비 중',ended:'접수 마감',unavailable:'접수 대기'})[closedState()] || '접수 대기';
 const selection = () => offer?.open && offer.available.includes('admission') ? ['admission'] : [];
 function update() {
-  $('unresolved-attempt').hidden = !attempt?.unresolved;
+  $('unresolved-attempt').hidden = busy || !attempt?.unresolved;
   $('check-original').disabled = busy;
+  const submit = $('submit');
+  const progress = busy ? '신청 중...' : '';
+  submit.disabled = !offer?.open || busy || pendingPrice;
+  submit.textContent = progress || (offer?.open ? '컵앤볼 신청하기' : offer ? closedButton() : '접수 대기');
+  submit.setAttribute('aria-busy', String(busy));
+  if ($('submit-status').textContent !== progress) $('submit-status').textContent = progress;
+  $('test-offer-warning').hidden = !(offer?.test && offer.open);
   if (!offer) return;
   try { currentQuote = quote(offer, selection()); } catch { currentQuote = null; }
   $('items').replaceChildren();
@@ -25,8 +32,6 @@ function update() {
   }
   const total = currentQuote ? money(currentQuote.total) : '확인 중';
   if ($('total').textContent !== total) $('total').textContent = total;
-  $('submit').disabled = !offer.open || busy || pendingPrice;
-  $('submit').textContent = !offer.open ? closedButton() : busy ? '접수 확인 중' : '컵앤볼 신청하기';
 }
 function applyPolicy(next) {
   policy = {...getCupsFormConfig(), ...next.formConfig};
@@ -57,6 +62,12 @@ function applyPolicy(next) {
   $('photo-prompt').textContent = split ? '현장 촬영 안내를 확인하십시오.' : '현장 촬영과 사진·영상의\n행사 홍보 활용에 동의하십니까?';
   document.querySelector('label[for="photo-consent"]').textContent = split ? '현장 촬영 안내를 확인했습니다.' : '네';
 }
+function showPriceLoadError() {
+  $('signup-banner').hidden = false;
+  $('availability-title').textContent = '컵앤볼 신청 안내';
+  $('availability').textContent = '가격을 불러오지 못했어.\n아직 접수 전이야.\n연결을 확인하고\n‘가격 다시 확인’을 눌러줘.';
+  $('retry').hidden = false;
+}
 function renderOffer(next) {
   const changedNotices = [];
   const noticeText = (value) => value.trim().replace(/\s+/gu, ' ');
@@ -81,14 +92,18 @@ function renderOffer(next) {
   noticeVersions = {consentVersion:next.consentVersion, photoConsentVersion:next.photoConsentVersion};
   offer = next;
   applyPolicy(next);
-  document.querySelector('main > .notice h2').textContent = offer.open ? '컵앤볼 신청 접수' : ({scheduled:'컵앤볼 신청 준비 중',ended:'컵앤볼 신청 마감',unavailable:'컵앤볼 신청 대기'})[closedState()];
   if (offer.promotionNotice) $('promotion-notice').textContent = offer.promotionNotice;
   if (offer.privacyNotice) $('privacy').textContent = offer.privacyNotice;
   if (offer.photoNotice) $('photo-notice').textContent = offer.photoNotice;
   if (offer.contact && !/\[|미정/.test(offer.contact)) $('operator-contact').textContent = `문의: ${offer.contact}`;
-  $('availability').textContent = offer.open ? '지금 신청할 수 있어.\n참가권이랑 금액을 확인해줘.' : ({scheduled:'아직 접수 준비 중이야.\n신청이 열릴 때까지 입금은 기다려줘.',ended:'신청 기간이 끝났어.\n새로 신청하거나 입금하지 말아줘.',unavailable:'지금은 신청을 받지 않아.\n접수가 열릴 때까지 입금은 기다려줘.'})[closedState()];
-  if (offer.test && offer.open) $('availability').textContent = '테스트 접수야. 입금하지 말아줘.';
+  $('retry').hidden = true;
+  $('signup-banner').hidden = offer.open;
+  if (!offer.open) {
+    $('availability-title').textContent = ({scheduled:'컵앤볼 신청 준비 중',ended:'컵앤볼 신청 마감',unavailable:'컵앤볼 신청 대기'})[closedState()];
+    $('availability').textContent = ({scheduled:'아직 접수 준비 중이야.\n신청이 열릴 때까지 입금은 기다려줘.',ended:'신청 기간이 끝났어.\n새로 신청하거나 입금하지 말아줘.',unavailable:'지금은 신청을 받지 않아.\n접수가 열릴 때까지 입금은 기다려줘.'})[closedState()];
+  }
   update();
+  if (offer.open && !currentQuote) showPriceLoadError();
   return changedNotices;
 }
 async function loadOffer() {
@@ -98,7 +113,11 @@ async function loadOffer() {
     if (!response.ok) throw new Error('offer');
     const data = await response.json();
     if ($('success').hidden) return renderOffer(data.offer || data);
-  } catch { offer = null; $('submit').disabled = true; $('availability').textContent = '가격을 불러오지 못했어.\n아직 접수 전이야.\n연결을 확인하고\n‘가격 다시 확인’을 눌러줘.'; }
+  } catch {
+    offer = null;
+    showPriceLoadError();
+    update();
+  }
   finally { $('retry').disabled = false; }
 }
 function clearError(control) {
@@ -218,9 +237,9 @@ async function sendAttempt(original) {
       original.unresolved = false;
       const changedNotices = data.offer ? renderOffer(data.offer) : await loadOffer();
       const consentChanged = data.error === 'consent_changed';
-      showErrors([[consentChanged ? (changedNotices?.[0] || 'consent') : 'retry', consentChanged
+      showErrors([[consentChanged ? (changedNotices?.[0] || 'consent') : 'submit', consentChanged
         ? '안내가 바뀌었어.\n새 촬영·개인정보 안내를 읽고\n다시 확인해줘.'
-        : '참가권 판매 조건이 바뀌었어.\n아직 접수 전이야.\n가격을 다시 확인해줘.']]);
+        : '참가권 판매 조건이 바뀌었어.\n아직 접수 전이야.\n바뀐 신청 안내를 확인해줘.']]);
       return;
     }
     if (response.status === 409 && data.error === 'sold_out') {
@@ -396,7 +415,6 @@ function showReceipt(receipt, restored = false) {
 function showForm() {
   $('success').hidden = true;
   $('signup-header').hidden = false;
-  $('signup-banner').hidden = false;
   form.hidden = false;
   const skip = document.querySelector('.skip');
   skip.hash = form.id;
@@ -421,7 +439,6 @@ function startNewSignup() {
   $('submit').textContent = '접수 준비 중';
   $('items').replaceChildren();
   $('total').textContent = '확인 중';
-  $('availability').textContent = '접수 안내와 가격을 다시 확인하고 있어.';
   showForm();
   $('name').focus();
   loadOffer();

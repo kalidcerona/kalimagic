@@ -248,8 +248,8 @@
         row.classList.remove("current");
         row.querySelector(".current-marker")?.remove();
       }
+      feeHint.hidden = Boolean(current);
       if (current) {
-        feeHint.innerHTML = '공이 들어 있는 컵이 지금 <span class="phrase">적용되는 금액이에요.</span>';
         current.row.classList.add("current");
         const marker = document.createElement("span");
         marker.className = "current-marker";
