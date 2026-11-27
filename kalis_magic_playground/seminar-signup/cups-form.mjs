@@ -15,13 +15,12 @@ function update() {
   try { currentQuote = quote(offer, selection()); } catch { currentQuote = null; }
   $('items').replaceChildren();
   for (const item of currentQuote?.items || []) {
-    const row = document.createElement('li'), name = document.createElement('span'), price = document.createElement('strong');
-    name.textContent = item.label; price.textContent = money(item.price); price.className = 'money';
-    row.append(name, price); $('items').append(row);
+    const row = document.createElement('li');
+    row.textContent = item.label;
+    $('items').append(row);
   }
-  $('total').textContent = currentQuote ? money(currentQuote.total) : '선택 전';
-  $('selection-total').textContent = $('total').textContent;
-  $('quote-status').textContent = currentQuote ? `입금할 금액 ${money(currentQuote.total)}` : '참가권을 골라줘';
+  const total = currentQuote ? money(currentQuote.total) : '선택 전';
+  if ($('total').textContent !== total) $('total').textContent = total;
   $('submit').disabled = !offer.open || busy || pendingPrice;
   $('submit').textContent = !offer.open ? closedButton() : busy ? '접수 확인 중' : '컵앤볼 신청하기';
 }
@@ -78,10 +77,8 @@ function renderOffer(next) {
   noticeVersions = {consentVersion:next.consentVersion, photoConsentVersion:next.photoConsentVersion};
   offer = next;
   applyPolicy(next);
-  $('admission-price').textContent = money(offer.prices.admission);
   $('admission').disabled = !offer.open || !offer.available.includes('admission');
   if ($('admission').disabled) $('admission').checked = false;
-  $('price-period').textContent = '12월 6일까지 50,000원 · 12월 7일-13일 60,000원 · 12월 14일-18일 70,000원';
   document.querySelector('main > .notice h2').textContent = offer.open ? '컵앤볼 신청 접수' : ({scheduled:'컵앤볼 신청 준비 중',ended:'컵앤볼 신청 마감',unavailable:'컵앤볼 신청 대기'})[closedState()];
   if (offer.promotionNotice) $('promotion-notice').textContent = offer.promotionNotice;
   if (offer.privacyNotice) $('privacy').textContent = offer.privacyNotice;

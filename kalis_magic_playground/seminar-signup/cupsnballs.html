@@ -136,9 +136,7 @@
           <section class="card question">
             <h2 id="q7"><span class="question-number">필수</span>12월 19일 컵앤볼 입문 <span class="phrase">클래스에 올 거야?</span></h2>
             <p>오후 6시 30분-11시 30분 · 렉쳐노트 퍼블리싱<br>서울 동작구 남부순환로 2043 지하 1층</p>
-            <div class="option"><input id="admission" name="selection" type="checkbox" value="admission" required><label for="admission">컵앤볼 참가권 <strong id="admission-price" class="money">가격 확인 중</strong></label></div>
-            <p id="price-period" class="hint"></p>
-            <div class="total"><span>선택한 금액</span><strong id="selection-total" class="money">선택 전</strong></div>
+            <div class="option"><input id="admission" name="selection" type="checkbox" value="admission" required><label for="admission">컵앤볼 참가권</label></div>
           </section>
           <section class="card question">
             <h2 id="q9"><span class="question-number"><small>필수</small></span>어떤 이름으로 입금할 거야?</h2>
@@ -183,7 +181,6 @@
             <p id="refund-notice">환불 규정: 한국 시간으로 12월 12일까지는 전액, 13-16일에는 70%, 17-18일에는 50%를 환불해 드립니다. 행사 당일인 12월 19일에는 환불이 불가능합니다.</p>
             <p>신청 정보 삭제를 원하시면 신청 후 운영자가 보내는 카카오톡 메시지에 답장하십시오.</p>
             <ul id="items" class="items"></ul>
-            <p id="quote-status" class="sr-only" aria-live="polite" aria-atomic="true"></p>
             <p class="hint">신청할 때 가격을 한 번 더 확인할게. 금액이 바뀌면 접수 전에 알려줄게.</p>
             <div class="trap" aria-hidden="true">
               <label for="website"> 웹사이트 </label>
@@ -199,7 +196,7 @@
               <p> 가격이 바뀌었어. 아직 접수 전이야. 새 금액을 확인하고 다시 신청해줘. </p>
               <button id="accept-price" type="button"> 새 금액 확인 </button>
             </div>
-            <div class="total">
+            <div class="total" role="status" aria-live="polite" aria-atomic="true">
               <span> 입금할 금액 </span>
               <strong id="total" class="money"> 확인 중 </strong>
             </div>

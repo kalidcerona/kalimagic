@@ -97,11 +97,17 @@ try {
     for (const width of [320,375,390,414,768,1024,1280,1440]) {
       await page.setViewportSize({width, height:900});
       await page.evaluate(() => document.fonts.ready);
+      if (state === 'initial' || state === 'selected') {
+        const prices = (await page.locator('#signup').innerText()).match(/[0-9][0-9,]*원/g) || [];
+        assert.deepEqual(prices, state === 'selected' ? ['50,000원'] : [], state + ' at ' + width);
+        const summary = page.locator('.form-summary [role="status"][aria-live="polite"][aria-atomic="true"]');
+        assert.equal(await summary.locator('#total').textContent(), state === 'selected' ? '50,000원' : '선택 전');
+      }
       const layoutIssues = await page.evaluate(() => {
         const issues = [];
         if (document.documentElement.scrollWidth > innerWidth) issues.push('horizontal overflow');
         if (/[—~～]/u.test(document.body.innerText)) issues.push('unexpected punctuation');
-        for (const element of document.querySelectorAll('h1,h2,.money,#price-period,#receipt dd')) {
+        for (const element of document.querySelectorAll('h1,h2,.money,#receipt dd')) {
           if (!element.getClientRects().length) continue;
           const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
           const lines = new Map();
