@@ -481,3 +481,25 @@ test('cups migration refuses existing legacy rows, unknown headers and lock cont
   store.state.lockUnavailable = true;
   assertUntouched(/lock_unavailable/);
 });
+
+test('Cups alerts use the stored display number and event count and respect Discord cooldown', async () => {
+  const {createHandler} = await import('../../netlify/functions/seminar-signup.mjs');
+  const messages = [], tasks = [];
+  const store = sheet();
+  await submitSignup(input(),context(store));
+  const run = createHandler({config,store,now:()=>now,webhook:'https://example.invalid/hook',
+    send:async (_url, options)=>{
+      messages.push(JSON.parse(options.body));
+      return new Response(null,{status:429,headers:{'Retry-After':'30'}});
+    }
+  });
+  for (let i=0;i<2;i++) {
+    const response = await run({httpMethod:'POST',rawUrl:'https://example.test/api/seminars/signup',
+      headers:{origin:'https://example.test','content-type':'application/json','x-nf-client-connection-ip':'local'},
+      body:JSON.stringify(input())},{waitUntil:task=>tasks.push(task)});
+    assert.equal(response.statusCode,200);
+    await Promise.all(tasks);
+  }
+  assert.deepEqual(messages,[{content:'문준영의 컵 앤 볼 입문 클래스 · 2026-11-27 18:00:00 KST · 접수번호 20261127180002 · 비회원 · 누적 2건',
+    flags:4,allowed_mentions:{parse:[]}}]);
+});

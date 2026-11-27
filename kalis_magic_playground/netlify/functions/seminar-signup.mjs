@@ -34,7 +34,26 @@ async function verifiedMember(headers, body, deps) {
 }
 
 export function createHandler(deps = {}) {
-  return async request => {
+  let resumeAlertsAt = 0;
+  async function alertSignup(receipt, eventName, member, count) {
+    if (!deps.webhook || Date.now() < resumeAlertsAt) return;
+    try {
+      const time = new Date(Date.parse(receipt.createdAt) + 9 * 3600000).toISOString().slice(0,19).replace('T',' ');
+      const fields = [eventName, time + ' KST'];
+      if (receipt.displayReceiptNumber) fields.push('접수번호 ' + receipt.displayReceiptNumber);
+      fields.push(member ? '회원' : '비회원', '누적 ' + count + '건');
+      const response = await (deps.send || fetch)(deps.webhook, {
+        method:'POST', redirect:'error', headers:{'content-type':'application/json'},
+        body:JSON.stringify({content:fields.join(' · '), flags:4, allowed_mentions:{parse:[]}}),
+        signal:AbortSignal.timeout(3000)
+      });
+      if (response.status === 429 || response.headers.get('x-ratelimit-remaining') === '0') {
+        const seconds = Number(response.headers.get('retry-after') || response.headers.get('x-ratelimit-reset-after'));
+        resumeAlertsAt = Math.max(resumeAlertsAt, Date.now() + (seconds > 0 ? seconds : 1) * 1000);
+      }
+    } catch { /* A webhook failure cannot change a stored signup. */ }
+  }
+  return async (request, context) => {
     if (request.httpMethod !== 'POST') return json(405, { error: 'method_not_allowed' }, { Allow: 'POST' });
     const headers = Object.fromEntries(Object.entries(request.headers || {}).map(([k, v]) => [k.toLowerCase(), v]));
     let origin;
@@ -57,6 +76,9 @@ export function createHandler(deps = {}) {
       const ip = request.requestContext?.identity?.sourceIp || headers['x-nf-client-connection-ip'];
       const member = await verifiedMember(headers,body,deps);
       const result = await submitSignup(body, { member, offer:(deps.getOffer || getOffer)(now,settings),config:settings,store:deps.store || createSheetsStore(settings),secret:settings.hmacSecret,ip,now });
+      if (Number.isSafeInteger(result.newRowCount) && result.newRowCount > 0) {
+        context?.waitUntil(alertSignup(result.receipt, settings.name, member, result.newRowCount));
+      }
       return json(200, { receipt: result.receipt });
     } catch (error) {
       if (error instanceof SignupError && error.message === 'signup_closed') return closedResponse();
@@ -65,4 +87,14 @@ export function createHandler(deps = {}) {
     }
   };
 }
-export const handler = createHandler();
+const handleSignup = createHandler({webhook:process.env.DISCORD_SIGNUP_WEBHOOK_URL || process.env.DISCORD_CONTACT_WEBHOOK_URL});
+
+export default async function signup(request, context) {
+  const headers = Object.fromEntries(request.headers);
+  headers['x-nf-client-connection-ip'] = context.ip;
+  const result = await handleSignup({
+    rawUrl:request.url, httpMethod:request.method, headers,
+    body:request.method === 'POST' ? await request.text() : ''
+  }, context);
+  return new Response(result.body, {status:result.statusCode, headers:result.headers});
+}

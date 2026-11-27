@@ -354,7 +354,7 @@ function doPost(e) {
     sheet.getRange(rows.length+2,seminarColumn('입금할 금액')+1).setNumberFormat('0');
     sheet.getRange(rows.length+2,seminarColumn('입금')+1).setNumberFormat('0');
     SpreadsheetApp.flush();
-    return seminarJson({ok:true,receipt:seminarReceipt(row)});
+    return seminarJson({ok:true,newRowCount:rows.length+1,receipt:seminarReceipt(row)});
   } catch (error) {
     return seminarJson({ok:false,error:error.message === 'invalid_signature' || error.message === 'invalid_event' ? error.message : 'storage_unavailable'});
   } finally { if (held) lock.releaseLock(); }

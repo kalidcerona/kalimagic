@@ -2,13 +2,14 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createHmac, randomUUID } from 'node:crypto';
 import { validateSignup, submitSignup, digest } from '../../netlify/functions/_lib/seminar-signups.mjs';
-import { createHandler, handler } from '../../netlify/functions/seminar-signup.mjs';
+import { createHandler } from '../../netlify/functions/seminar-signup.mjs';
 import { createSheetsStore, signEnvelope, validSheetsUrl } from '../../netlify/functions/_lib/seminar-sheets.mjs';
 import { TERMS_VERSION, PRIVACY_VERSION } from '../../member-policy-config.mjs';
 import { event, getOffer } from '../../netlify/functions/_lib/seminar-events.mjs';
 const now = new Date('2026-12-20T00:00:00+09:00');
 const secret = 'test-hmac-secret-only-not-a-real-key-123456789';
 const config = {...event,enabled:true,testMode:true,testSheetsUrl:'https://script.google.com/macros/s/test-deployment/exec',consentVersion:event.consentVersion,privacyNotice:'테스트 고지',account:'000000000000',holder:'테스트',contact:'help@example.test',sheetsUrl:'https://script.google.com/macros/s/test-deployment/exec',signingSecret:'test-signing-secret-not-a-real-key-123456789',hmacSecret:secret};
+const handler = createHandler();
 const offer = getOffer(now, config);
 function input(changes = {}) { return {eventId:config.id,selection:['bundle','open'],name:'테스트 참가자',ageConfirmed:true,birthDate:'1990-01-01',gender:'male',discovery:'instagram',reason:'content',photoConsent:true,photoConsentVersion:offer.photoConsentVersion,contactType:'phone',contact:'01012345678',payerName:'',consent:true,consentVersion:offer.consentVersion,idempotencyKey:randomUUID(),quote:{version:offer.version,tier:offer.tier,total:87000},website:'',...changes}; }
 function memory() {
@@ -445,4 +446,31 @@ test('guest HMAC remains byte-compatible with the 0d38b0d writer', async () => {
     await assert.rejects(submitSignup(body,ctx),error('consent_changed'));
   }
   assert.deepEqual(seen,[fingerprint,fingerprint]);
+});
+
+test('only a newly stored signup dispatches a private-data-free background alert', async () => {
+  const sheet = createLocalSheet({now:now.getTime(),secret:config.signingSecret});
+  const pending = [], calls = [];
+  let failDelivery;
+  const run = createHandler({config, now:()=>now, store:sheet, webhook:'https://example.invalid/hook',
+    send:(_url, options)=>{
+      calls.push(options);
+      return new Promise((_resolve,reject)=>{ failDelivery = reject; });
+    }
+  });
+  const runtime = {waitUntil:task=>pending.push(task)};
+  const body = input();
+  const accepted = await run(request(body),runtime);
+  assert.equal(accepted.statusCode,200);
+  assert.equal(pending.length,1);
+  assert.deepEqual(JSON.parse(calls[0].body),{
+    content:'칼리의 대번개 · 2026-12-20 00:00:00 KST · 비회원 · 누적 1건', flags:4, allowed_mentions:{parse:[]}
+  });
+  assert.ok(calls[0].signal instanceof AbortSignal);
+  failDelivery(new Error('Discord offline'));
+  await pending[0];
+  assert.deepEqual(await run(request(body),runtime),accepted);
+  assert.equal((await run(request({...body,name:'다른 이름'}),runtime)).statusCode,409);
+  assert.equal(calls.length,1);
+  assert.equal(sheet.state.rows.length,2);
 });

@@ -106,7 +106,7 @@ export async function submitSignup(body, { offer, config, store, secret, ip, mem
     ipHash:digest(secret,'ip',ip),contactHash:digest(secret,'contact',`${input.eventId}:${input.contactType}:${input.contact}`),capacity:config.capacity,paymentDueHours:config.paymentDueHours};
   let result;
   try { result = await store.submit(payload); } catch { throw new SignupError('service_unavailable',503); }
-  if (result?.ok === true) return {receipt:safeReceipt(result.receipt,config)};
+  if (result?.ok === true) return {receipt:safeReceipt(result.receipt,config),newRowCount:result.newRowCount};
   const statuses = {service_unavailable:503,agreement_required:403,member_unavailable:403,signup_closed:403,consent_changed:409,option_unavailable:409,price_changed:409,idempotency_conflict:409,sold_out:409,rate_limited:429};
   const status = result?.ok === false && statuses[result.error];
   if (!status) throw new SignupError('service_unavailable',503);

@@ -105,7 +105,7 @@ test('notice rotation preserves historical receipts, duplicate checks and capaci
   sheet.context.SEMINAR_CONSENT_VERSION='2026-11-27-v2';
   sheet.context.SEMINAR_PHOTO_CONSENT_VERSION='2026-11-27-v2';
   assert.deepEqual(sheet.ready(),{ok:true,ready:true});
-  assert.deepEqual(sheet.submit({...original,eligible:false,rejection:{error:'consent_changed'}}),accepted);
+  assert.deepEqual(sheet.submit({...original,eligible:false,rejection:{error:'consent_changed'}}),{ok:true,receipt:accepted.receipt});
   assert.equal(sheet.submit({...original,fingerprint:'f'.repeat(64)}).error,'idempotency_conflict');
   assert.equal(sheet.submit(localSubmission(2,sheet.state.now)).error,'consent_changed');
   assert.equal(sheet.state.rows.length,2);
@@ -117,7 +117,7 @@ test('notice rotation preserves historical receipts, duplicate checks and capaci
   for(let i=2;i<=60;i++)assert.equal(sheet.submit(current(i)).ok,true);
   assert.equal(sheet.state.rows.length,61);
   assert.equal(sheet.submit(current(61)).error,'sold_out');
-  assert.deepEqual(sheet.submit(original),accepted);
+  assert.deepEqual(sheet.submit(original),{ok:true,receipt:accepted.receipt});
   assert.equal(sheet.state.rows[1][sheet.state.rows[0].indexOf('동의 버전')],'2026-11-30-v2');
   assert.equal(sheet.state.rows[2][sheet.state.rows[0].indexOf('동의 버전')],'2026-11-27-v2');
 });
@@ -138,12 +138,12 @@ test('member bridge verifies both notice versions, preserves legacy retries and 
   assert.equal(accepted.ok,true);assert.equal(JSON.stringify(accepted).includes(id),false);
   assert.deepEqual(s.state.rows[1].slice(-3),['회원',id,0]);
   member.eligible=false;member.rejection={error:'agreement_required'};
-  assert.deepEqual(s.submit(member),accepted);
+  assert.deepEqual(s.submit(member),{ok:true,receipt:accepted.receipt});
   assert.equal(s.submit({...member,fingerprint:'e'.repeat(64)}).error,'idempotency_conflict');
   const old=localSubmission(2), replay=s.submit(old);
   assert.deepEqual(s.state.rows[2].slice(-3),['기존 접수','',0]);
   s.props.SEMINAR_ACCEPT_PREVIOUS_NOTICE='false';
-  assert.deepEqual(s.submit(old),replay);
+  assert.deepEqual(s.submit(old),{ok:true,receipt:replay.receipt});
   assert.equal(s.submit(localSubmission(3)).error,'consent_changed');
 });
 
