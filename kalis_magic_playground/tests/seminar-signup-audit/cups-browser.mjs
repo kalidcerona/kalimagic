@@ -15,6 +15,25 @@ const {chromium} = require(process.env.PLAYWRIGHT_CORE_PATH || 'playwright-core'
 const origin = new URL(process.env.SEMINAR_AUDIT_ORIGIN);
 assert.equal(origin.hostname, '127.0.0.1');
 const browser = await chromium.launch({executablePath:process.env.CHROME_PATH});
+const widths = [320,375,390,414,768,1024,1280,1440];
+const viewportHeight = 900;
+async function captureFrame(page, session, file, bottom = false) {
+  const {width, height:viewportHeight} = page.viewportSize();
+  const height = bottom ? viewportHeight : await page.evaluate(() => document.documentElement.scrollHeight);
+  if (!bottom) {
+    await page.setViewportSize({width, height});
+  }
+  await page.evaluate(async bottom => {
+    window.scrollTo({top:bottom ? document.documentElement.scrollHeight : 0, behavior:'instant'});
+    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+  }, bottom);
+  // Capture the viewport surface without requesting an offscreen full-page clip.
+  const {data} = await session.send('Page.captureScreenshot', {format:'png', captureBeyondViewport:false});
+  const png = Buffer.from(data, 'base64');
+  assert.deepEqual([png.readUInt32BE(16), png.readUInt32BE(20)], [width, height],
+    file + ': Chrome clamped the capture dimensions. Set CHROME_PATH to a Chromium headless shell.');
+  writeFileSync(path.join(output, file), png);
+}
 try {
   const page = await browser.newPage({reducedMotion:'reduce'});
   page.setDefaultTimeout(5000);
@@ -54,11 +73,20 @@ try {
   await landing.evaluate(() => window.dispatchEvent(new Event('focus')));
   await checkTier('50,000원');
   assert.equal(await landing.locator('.nav-hot').getAttribute('href'), '#tickets');
-  for (const width of [320,375,390,414,768,1024,1280,1440]) {
-    await landing.setViewportSize({width,height:900});
-    await landing.evaluate(() => document.fonts.ready);
+  await landing.clock.resume();
+  await landing.bringToFront();
+  const landingCapture = await landing.context().newCDPSession(landing);
+  await landing.evaluate(async () => {
+    await document.fonts.ready;
+    await Promise.all(Array.from(document.images, image => {
+      image.loading = 'eager';
+      return image.decode();
+    }));
+  });
+  for (const width of widths) {
+    await landing.setViewportSize({width,height:viewportHeight});
     assert.ok(await landing.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
-    await landing.screenshot({path:path.join(output, 'detail-'+width+'.png'),fullPage:true});
+    await captureFrame(landing, landingCapture, 'detail-'+width+'.png');
   }
   for (const selector of ['.hero .pill-cta','.pill-cta.wide']) {
     await landing.locator(selector).click();
@@ -66,6 +94,8 @@ try {
     await landing.goBack();
   }
   await landing.close();
+  await page.bringToFront();
+  const formCapture = await page.context().newCDPSession(page);
   console.log('PASS landing: opening, both price changes and closing at KST boundaries');
   const submissions = [];
   page.on('pageerror', error => errors.push(error.message));
@@ -171,8 +201,8 @@ try {
   }
 
   async function capture(state) {
-    for (const width of [320,375,390,414,768,1024,1280,1440]) {
-      await page.setViewportSize({width, height:900});
+    for (const width of widths) {
+      await page.setViewportSize({width, height:viewportHeight});
       await page.evaluate(() => document.fonts.ready);
       const unplanned = await checkLineBreaks();
       if (unplanned.length) wrapFailures.push({state,width,unplanned});
@@ -217,18 +247,7 @@ try {
         return issues;
       });
       assert.deepEqual(layoutIssues, [], state + ' ' + width + ': ' + layoutIssues.join(', '));
-      // Capture one compositor frame at document height. Some Chrome versions repeat
-      // the first tile when fullPage captures a document taller than the viewport.
-      if (state === 'filled') {
-        await page.locator('#submit').scrollIntoViewIfNeeded();
-        await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
-      } else {
-        const height = await page.evaluate(() => document.documentElement.scrollHeight);
-        await page.setViewportSize({width, height});
-        await page.evaluate(() => window.scrollTo(0, 0));
-      }
-      await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
-      await page.screenshot({path:path.join(output, state+'-'+width+'.png')});
+      await captureFrame(page, formCapture, state+'-'+width+'.png', state === 'filled');
       const boxes = await page.evaluate(() => {
         const selectors = ['h1','#q1','.question .cups-notice summary','#errors a','#success-title','#test-warning'];
         return selectors.flatMap(selector => {
@@ -462,7 +481,21 @@ try {
   mismatched.receipt.eventId = 'daebeongae';
   const invalidNumber = JSON.parse(saved.value);
   invalidNumber.receipt.displayReceiptNumber = '20260231180000';
+  const testReceipt = JSON.parse(saved.value);
+  testReceipt.receipt.test = true;
+  const restoresBefore = submissions.length;
+  await page.evaluate(({key,value}) => sessionStorage.setItem(key,value),
+    {key:saved.key,value:JSON.stringify(testReceipt)});
+  await page.reload();
+  await page.waitForSelector('#test-warning:visible');
+  const missingTest = structuredClone(testReceipt);
+  delete missingTest.receipt.test;
+  const missingBank = JSON.parse(saved.value);
+  delete missingBank.receipt.payment.bank;
+  const invalidTest = JSON.parse(saved.value);
+  invalidTest.receipt.test = 'false';
   for (const [value, clock] of [
+    [JSON.stringify(missingTest), now], [JSON.stringify(missingBank), now], [JSON.stringify(invalidTest), now],
     ['{', now], [JSON.stringify(mismatched), now], [JSON.stringify(invalidNumber), now],
     [saved.value, new Date('2026-12-19T23:30:00+09:00')]
   ]) {
@@ -473,6 +506,17 @@ try {
     assert.ok(await page.locator('#success').isHidden());
     assert.equal(await page.evaluate(key => sessionStorage.getItem(key), saved.key), null);
   }
+  assert.equal(submissions.length, restoresBefore);
+  const oldStored = JSON.parse(saved.value);
+  delete oldStored.receipt.displayReceiptNumber;
+  oldStored.receipt.id = lastReceipt.id;
+  await page.evaluate(({key,value}) => sessionStorage.setItem(key,value),
+    {key:saved.key,value:JSON.stringify(oldStored)});
+  await page.clock.setFixedTime(now);
+  await page.reload();
+  await page.waitForSelector('#success:visible');
+  assert.equal(await page.textContent('#display-receipt-number'), lastReceipt.id);
+  assert.equal(submissions.length, restoresBefore);
   // Storage can be disabled by browser policy. The live legacy receipt must still work.
   offer = {...getOffer(now,config),test:false};
   await page.addInitScript(() => {

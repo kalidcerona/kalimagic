@@ -160,6 +160,7 @@ h1 span,
 }
 
 .details {
+  padding-block: 12px;
   background: #e8c59a;
   color: #2e301c;
   border-bottom: 1px solid #9c895c;
@@ -171,7 +172,6 @@ h1 span,
   align-items: center;
   gap: 2px 1rem;
   margin: 0 auto;
-  padding-block: 8px;
   font-size: .875rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;

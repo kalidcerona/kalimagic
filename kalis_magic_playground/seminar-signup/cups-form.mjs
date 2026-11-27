@@ -320,6 +320,16 @@ function saveReceipt(receipt) {
     receiptWithoutStorage = receipt;
   }
 }
+// Stored v1 records must match the snapshot writer, including empty payment
+// strings on test receipts. Server compatibility defaults apply only on intake.
+function matchesSnapshot(value, snapshot) {
+  if (value === snapshot) return true;
+  if (!value || !snapshot || typeof value !== 'object' || typeof snapshot !== 'object' ||
+      Array.isArray(value) !== Array.isArray(snapshot)) return false;
+  const keys = Object.keys(snapshot);
+  return Object.keys(value).length === keys.length && keys.every(key =>
+    Object.hasOwn(value, key) && matchesSnapshot(value[key], snapshot[key]));
+}
 function readReceipt() {
   if (Date.now() < receiptExpiry) {
     if (receiptWithoutStorage) return receiptWithoutStorage;
@@ -328,7 +338,7 @@ function readReceipt() {
       if (stored === null) return null;
       const saved = JSON.parse(stored);
       const receipt = saved?.version === receiptVersion && receiptSnapshot(saved.receipt);
-      if (receipt) return receipt;
+      if (receipt && matchesSnapshot(saved, {version:receiptVersion, receipt})) return receipt;
     } catch { /* Storage may be unavailable, or the record may be invalid. */ }
   }
   clearStoredReceipt();

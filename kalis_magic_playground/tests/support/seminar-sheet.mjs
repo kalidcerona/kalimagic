@@ -11,9 +11,16 @@ export function createLocalSheet({ now = Date.parse('2026-12-15T01:00:00Z'), sec
     function range(row, col, height = 1, width = 1) {
       return { row,col,height,width, getNumRows:()=>height, getNumColumns:()=>width, getRow:()=>row, getColumn:()=>col, setValue(value){return this.setValues([[value]]);}, setNumberFormat(format) { tab.formats.push({row,col,height,width,format}); return this; }, setValues(values) {
         for (let r = 0; r < height; r++) { tab.rows[row-1+r] ||= []; for (let c = 0; c < width; c++) tab.rows[row-1+r][col-1+c] = values[r][c]; } return this;
-      }, clearDataValidations() {tab.cleared.push({row,col,height,width,kind:'validation'});return this;}, clearFormat() {tab.cleared.push({row,col,height,width,kind:'format'});return this;}, setDataValidation(rule) { tab.validation = {...rule,row,col,height,width}; return this; }, createFilter() { if(tab.failFilter){tab.failFilter=false;throw Error('filter_failure');} filter = {row,col,height,width,criteria:{},getRange:()=>range(row,col,height,width),getColumnFilterCriteria(col){return this.criteria[col] || null;},setColumnFilterCriteria(col,value){this.criteria[col]=value;return this;},remove(){filter=null;}}; tab.filter=filter; return filter; } };
+      }, clearDataValidations() {tab.cleared.push({row,col,height,width,kind:'validation'});return this;}, clearFormat() {tab.cleared.push({row,col,height,width,kind:'format'});return this;}, setDataValidation(rule) { tab.validation = {...rule,row,col,height,width}; return this; }, createFilter() { if(tab.failFilter){tab.failFilter=false;throw Error('filter_failure');} filter = {row,col,height,width,criteria:{},getRange(){return range(this.row,this.col,this.height,this.width);},getColumnFilterCriteria(col){return this.criteria[col] || null;},setColumnFilterCriteria(col,value){this.criteria[col]=value;return this;},remove(){filter=null;}}; tab.filter=filter; return filter; } };
     }
-    const sheet = { getMaxColumns:()=>tab.maxColumns, insertColumnsAfter(index,count){tab.maxColumns+=count;}, getMaxRows:()=>tab.maxRows, insertRowsAfter(index,count){tab.maxRows+=count;}, getProtections:()=>tab.protections, setConditionalFormatRules(rules) { tab.rules=rules; }, getDataRange: () => ({ getValues: () => { if (!state.locked) throw Error('read_without_lock'); return structuredClone(tab.rows); } }), getLastRow: () => tab.rows.length, getRange: range, setFrozenRows(value) { tab.frozen = value; }, getFilter: () => filter, protect() {
+    const sheet = { getMaxColumns:()=>tab.maxColumns, insertColumnsAfter(index,count){tab.maxColumns+=count;}, getMaxRows:()=>tab.maxRows, insertRowsAfter(index,count){tab.maxRows+=count;},
+      deleteRow(row) {
+        tab.rows.splice(row-1,1);
+        tab.maxRows--;
+        if (filter && row < filter.row) filter.row--;
+        else if (filter && row < filter.row + filter.height) filter.height--;
+      },
+      getProtections:()=>tab.protections, setConditionalFormatRules(rules) { tab.rules=rules; }, getDataRange: () => ({ getValues: () => { if (!state.locked) throw Error('read_without_lock'); return structuredClone(tab.rows); } }), getLastRow: () => tab.rows.length, getRange: range, setFrozenRows(value) { tab.frozen = value; }, getFilter: () => filter, protect() {
       const p = { setDescription(value) {this.description=value; return this; }, setUnprotectedRanges(ranges) { this.ranges=ranges; return this; }, getEditors: () => [], removeEditors() {}, canDomainEdit: () => false, remove(){tab.protections=tab.protections.filter(item=>item!==this);} }; tab.protections.push(p);return p;
     } };
     return sheet;

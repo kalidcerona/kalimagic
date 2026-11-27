@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {randomUUID} from 'node:crypto';
+import {readFileSync} from 'node:fs';
+import {runInContext} from 'node:vm';
 import {cupsnballs,getOffer,getEvent,accountForEvent} from '../../netlify/functions/_lib/seminar-events.mjs';
 import {validateSignup,submitSignup} from '../../netlify/functions/_lib/seminar-signups.mjs';
 import {createLocalSheet,localSubmission} from '../support/seminar-sheet.mjs';
@@ -278,6 +280,66 @@ test('cup signup accepts a legacy UUID receipt and rejects malformed display num
   }
 });
 
+function customFormula(formula, hiddenValues = []) {
+  return {
+    getCriteriaType: () => 'CUSTOM_FORMULA',
+    getCriteriaValues: () => [formula],
+    getHiddenValues: () => hiddenValues,
+    copy: () => ({
+      withCriteria(type, [replacement]) {
+        assert.equal(type, 'CUSTOM_FORMULA');
+        return {build: () => customFormula(replacement, hiddenValues)};
+      }
+    })
+  };
+}
+
+for (const formula of [null,'=LEN($C2)>0']) {
+  test(`migrates the 79eb758 setup after deleting its last signup (${formula || 'default filter'})`, () => {
+    const eventId = 'cupsnballs';
+    const store = createLocalSheet({setup:false,eventId,secret,now:now.getTime(),properties:{
+      CUPSNBALLS_SHEET_ID:'local-test-sheet',CUPSNBALLS_SHEETS_SIGNING_SECRET:secret,
+      CUPSNBALLS_CONSENT_VERSION:config.consentVersion
+    }});
+    const historical = readFileSync(new URL('../fixtures/seminar-cups-setup-79eb758.gs',import.meta.url),'utf8');
+    runInContext(historical,store.context);
+    store.context.setupCupsnballsSheet();
+    const historicalSheet = store.tabs.get('컵앤볼 신청 명단').sheet;
+    const {state} = store;
+    const {filter} = state;
+    assert.equal(historicalSheet.getLastRow(),1);
+    assert.equal(state.rows[0].length,31);
+    assert.equal(filter.width,31);
+    assert.equal(filter.getRange().getColumn(),1);
+    assert.deepEqual(filter.criteria,{});
+    const criterion = formula ? customFormula(formula) : null;
+    if (criterion) filter.setColumnFilterCriteria(3,criterion);
+
+    historicalSheet.getRange(2,1,1,31).setValues([[randomUUID(), ...Array(30).fill('')]]);
+    assert.equal(historicalSheet.getLastRow(),2);
+    const current = readFileSync(new URL('../../scripts/seminar-signup/Code.gs',import.meta.url),'utf8');
+    runInContext(current,store.context);
+    const flushes = state.flushes;
+    assert.throws(() => store.context.migrateCupsnballsSheet(),/existing_rows_preserved/);
+    assert.equal(state.filter,filter);
+    assert.equal(state.flushes,flushes);
+
+    historicalSheet.deleteRow(2);
+    assert.equal(historicalSheet.getLastRow(),1);
+    assert.equal(filter.height,60);
+    store.context.migrateCupsnballsSheet();
+    assert.equal(historicalSheet.getLastRow(),1);
+    assert.equal(state.rows[0].length,32);
+    assert.deepEqual(state.rows[0].slice(-2),['표시 접수번호','입금']);
+    assert.equal(state.filter.width,32);
+    assert.equal(state.filter.height,60);
+    assert.equal(state.filter.getColumnFilterCriteria(3),criterion);
+    assert.equal(state.protections[0].ranges[0].col,32);
+    const readiness = store.submit({action:'readiness',eventId,consentVersion:config.consentVersion});
+    assert.equal(readiness.ready,true);
+  });
+}
+
 function checkCupsMigration(filterWidth) {
   const store = createLocalSheet({setup:false, properties:{
     SEMINAR_EVENT_ID:'daebeongae,cupsnballs', CUPSNBALLS_SHEET_ID:'local-test-sheet',
@@ -295,10 +357,19 @@ function checkCupsMigration(filterWidth) {
   const payment = cupsSheet.getRange(2,31,cups.maxRows-1,1);
   payment.setDataValidation({formula:'=ISNUMBER(AE2)'});
   const protection = cupsSheet.protect().setUnprotectedRanges([payment]);
-  const paymentCriterion = {synthetic:'paid-only',getCriteriaType:() => null};
+  const paymentCriterion = filterWidth === 31
+    ? customFormula('=$AE2=1',['0'])
+    : {synthetic:'paid-only',getCriteriaType:() => null};
   const secondCriterion = {synthetic:'selected',getCriteriaType:() => null};
+  const nameCriterion = customFormula('=LEN($C2)>0');
+  const externalCriterion = customFormula(`=AND(COUNT(C:D)>0,'Other''s tab'!$AE2>0)`);
+  const dateCriterion = customFormula('=AND(ISDATE($C2),TODAY()>C2,ROUNDUP(D2,0)>0,COLUMN($C2)=3,INDIRECT("C2")>0)');
+  const mixedCriterion = customFormula(`=AND(REGEXMATCH(D2,"AE2 ""AE"""),'컵앤볼 신청 명단'!$ae$2=1,SUM(AE2:$AE)>0)`);
   cupsSheet.getRange(1,1,cups.maxRows,filterWidth).createFilter()
-    .setColumnFilterCriteria(31,paymentCriterion).setColumnFilterCriteria(5,secondCriterion);
+    .setColumnFilterCriteria(3,nameCriterion).setColumnFilterCriteria(4,mixedCriterion)
+    .setColumnFilterCriteria(5,secondCriterion).setColumnFilterCriteria(6,externalCriterion)
+    .setColumnFilterCriteria(7,dateCriterion)
+    .setColumnFilterCriteria(31,paymentCriterion);
   const daebeongae = store.tabs.get('신청 명단').state;
   const inquiry = store.tabs.get('문의').state;
   const legacyRows = structuredClone(daebeongae.rows);
@@ -315,6 +386,8 @@ function checkCupsMigration(filterWidth) {
   store.state.failFlush = true;
   assert.throws(() => store.context.migrateCupsnballsSheet(), /lost_flush_response/);
   assert.deepEqual(cups.rows, [oldHeader]);
+  assert.equal(cups.filter.getColumnFilterCriteria(31),paymentCriterion);
+  assert.equal(cups.filter.getColumnFilterCriteria(4),mixedCriterion);
   assert.equal(store.state.locked,false);
   store.context.migrateCupsnballsSheet();
   assert.deepEqual(cups.rows, [[...oldHeader.slice(0,-1),'표시 접수번호','입금']]);
@@ -327,8 +400,20 @@ function checkCupsMigration(filterWidth) {
   assert.equal(protection.ranges[0].col,32);
   assert.equal(cups.filter.width,32);
   assert.equal(cups.filter.getColumnFilterCriteria(31),null);
-  assert.equal(cups.filter.getColumnFilterCriteria(32),paymentCriterion);
+  const migratedPayment = cups.filter.getColumnFilterCriteria(32);
+  if (filterWidth === 31) {
+    assert.deepEqual(migratedPayment.getCriteriaValues(),['=$AF2=1']);
+    assert.deepEqual(migratedPayment.getHiddenValues(),['0']);
+  } else {
+    assert.equal(migratedPayment,paymentCriterion);
+  }
+  assert.equal(cups.filter.getColumnFilterCriteria(3),nameCriterion);
+  assert.deepEqual(cups.filter.getColumnFilterCriteria(4).getCriteriaValues(),[
+    `=AND(REGEXMATCH(D2,"AE2 ""AE"""),'컵앤볼 신청 명단'!$AF$2=1,SUM(AF2:$AF)>0)`
+  ]);
   assert.equal(cups.filter.getColumnFilterCriteria(5),secondCriterion);
+  assert.equal(cups.filter.getColumnFilterCriteria(6),externalCriterion);
+  assert.equal(cups.filter.getColumnFilterCriteria(7),dateCriterion);
   assert.deepEqual(daebeongae.rows, legacyRows);
   assert.deepEqual(inquiry.rows, inquiryRows);
   assert.equal(daebeongae.filter, legacyFilter);
@@ -352,12 +437,21 @@ test('cups migration refuses existing legacy rows, unknown headers and lock cont
   const props = {...store.props};
   const assertUntouched = (message) => {
     const rows = structuredClone(cups.rows);
+    const formats = structuredClone(cups.formats), cleared = structuredClone(cups.cleared);
+    const maxColumns = cups.maxColumns, maxRows = cups.maxRows, rules = cups.rules;
+    const protectedRanges = cups.protections[0].ranges;
     assert.throws(() => store.context.migrateCupsnballsSheet(),message);
     assert.deepEqual(cups.rows,rows);
+    assert.deepEqual(cups.formats,formats);
+    assert.deepEqual(cups.cleared,cleared);
     assert.deepEqual(store.props,props);
     assert.equal(cups.flushes,flushes);
     assert.equal(cups.filter,filter);
     assert.equal(cups.validation,validation);
+    assert.equal(cups.maxColumns,maxColumns);
+    assert.equal(cups.maxRows,maxRows);
+    assert.equal(cups.rules,rules);
+    assert.equal(cups.protections[0].ranges,protectedRanges);
   };
   cups.rows.push(['existing application']);
   assertUntouched(/existing_rows_preserved/);
@@ -365,8 +459,14 @@ test('cups migration refuses existing legacy rows, unknown headers and lock cont
   cups.rows[0][29] = '알 수 없는 열';
   assertUntouched(/existing_header_preserved/);
   cups.rows[0][29] = '홍보용 사진 활용 동의';
-  filter.setColumnFilterCriteria(5,{getCriteriaType:() => 'CUSTOM_FORMULA'});
-  assertUntouched(/unsupported_filter_formula/);
+  for (const formula of [
+    '=INDIRECT("AE2")>0', '=INDIRECT("A"&"E2")>0', '=OFFSET(C2,0,28)>0',
+    '=SUM(AD2:AG2)>0', '=SUM(1:1)>0', '=AF2=0', '=COLUMN(AE2)=31',
+    '=LEN(PaymentStatus)>0', null
+  ]) {
+    filter.setColumnFilterCriteria(5,customFormula(formula));
+    assertUntouched(/unsupported_filter_formula/);
+  }
   filter.setColumnFilterCriteria(5,null);
   filter.setColumnFilterCriteria(31,{getCriteriaType:() => null});
   filter.setColumnFilterCriteria(32,{getCriteriaType:() => null});

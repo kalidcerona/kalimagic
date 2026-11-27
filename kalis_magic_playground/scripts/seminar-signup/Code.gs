@@ -169,10 +169,10 @@ function seminarReserveCupsReceipt(config, rows, receivedAt) {
   config.props.setProperty(key,counters.slice(0,offset).padEnd(offset,'0') + sequence + counters.slice(offset+2));
   return minute + sequence;
 }
-function seminarExpandCups(sheet, neededRow, priorPaymentColumn) {
+function seminarExpandCups(sheet, neededRow, migratedCriteria) {
   var props=PropertiesService.getScriptProperties(), key='cups_sheet_prepared_rows';
   var maxRows=sheet.getMaxRows();
-  if (!priorPaymentColumn && neededRow <= maxRows && Number(props.getProperty(key)) === maxRows) return;
+  if (!migratedCriteria && neededRow <= maxRows && Number(props.getProperty(key)) === maxRows) return;
   if (maxRows < neededRow) sheet.insertRowsAfter(maxRows,Math.max(100,neededRow-maxRows));
   var count = sheet.getMaxRows()-1, column=seminarColumn('입금'), letter=seminarLetter(column);
   var payment=sheet.getRange(2,column+1,count,1);
@@ -181,27 +181,32 @@ function seminarExpandCups(sheet, neededRow, priorPaymentColumn) {
   sheet.getProtections(SpreadsheetApp.ProtectionType.SHEET).forEach(function (protection) {protection.setUnprotectedRanges([payment]);});
   var filter=sheet.getFilter();
   var previousRange=filter && filter.getRange();
-  var movePayment=filter && priorPaymentColumn && previousRange.getNumColumns() >= priorPaymentColumn && filter.getColumnFilterCriteria(priorPaymentColumn);
-  if (!previousRange || previousRange.getNumRows() !== count+1 || previousRange.getNumColumns() !== SEMINAR_HEADERS.length || movePayment) {
-    var criteria=[], previousWidth=previousRange ? previousRange.getNumColumns() : 0;
-    for (var col=1;col<=previousWidth;col++) criteria[col]=filter.getColumnFilterCriteria(col);
-    function restore(target, movePayment) {
-      for (var col=1;col<criteria.length;col++) {
-        if (criteria[col]) target.setColumnFilterCriteria(movePayment && col === priorPaymentColumn ? column+1 : col,criteria[col]);
-      }
-    }
-    try {
-      if (filter) filter.remove();
-      restore(sheet.getRange(1,1,count+1,SEMINAR_HEADERS.length).createFilter(),movePayment);
-    } catch(error) {
-      // Restore the original criteria before returning a failed write; a retry
-      // repeats preparation because its completion marker is not advanced.
-      if (previousRange) { var partial=sheet.getFilter(); if(partial) partial.remove(); restore(previousRange.createFilter()); }
-      throw error;
-    }
+  var replaceFilter = migratedCriteria || !previousRange || previousRange.getNumRows() !== count+1 || previousRange.getNumColumns() !== SEMINAR_HEADERS.length;
+  var previousCriteria = [];
+  if (replaceFilter && previousRange) {
+    for (var col=1;col<=previousRange.getNumColumns();col++) previousCriteria[col]=filter.getColumnFilterCriteria(col);
   }
-  SpreadsheetApp.flush();
-  props.setProperty(key,String(count+1));
+  function applyCriteria(target, criteria) {
+    criteria.forEach(function (criterion, col) {
+      if (criterion) target.setColumnFilterCriteria(col,criterion);
+    });
+  }
+  try {
+    if (replaceFilter) {
+      if (filter) filter.remove();
+      applyCriteria(sheet.getRange(1,1,count+1,SEMINAR_HEADERS.length).createFilter(),migratedCriteria || previousCriteria);
+    }
+    SpreadsheetApp.flush();
+    props.setProperty(key,String(count+1));
+  } catch(error) {
+    if (replaceFilter) {
+      // Keep the old references if preparation fails before committing the new header.
+      var partial=sheet.getFilter();
+      if (partial) partial.remove();
+      if (previousRange) applyCriteria(previousRange.createFilter(),previousCriteria);
+    }
+    throw error;
+  }
 }
 function doPost(e) {
   var lock, held = false;
@@ -299,17 +304,77 @@ function setupSeminarSheet(eventId) {
 function setupDaebeongaeSheet() { return setupSeminarSheet('daebeongae'); }
 function setupCupsnballsSheet() { return setupSeminarSheet('cupsnballs'); }
 
-function seminarCheckCupsMigrationFilter(filter, displayColumn) {
-  if (!filter) return;
+function seminarMigrateCupsFilterFormula(formula, tabName, movesColumn) {
+  if (typeof formula !== 'string' || formula.charAt(0) !== '=' || formula.length === 1) throw Error('unsupported_filter_formula');
+  // Recognize A1 references and detect functions that can resolve other addresses.
+  // Quoted strings are single tokens, so literal text such as "AE2" stays intact.
+  var token = /"(?:[^"]|"")*"|([A-Z][A-Z0-9.]*)\s*(?=\()|(?:('(?:[^']|'')+'|[A-Z_]\w*)!)?(?:(\$?[A-Z]{1,3}(?:\$?[1-9]\d*)?)\s*:\s*(\$?[A-Z]{1,3}(?:\$?[1-9]\d*)?)|(\$?[A-Z]{1,3}\$?[1-9]\d*))(?![\w.$:])|(?:TRUE|FALSE)\b|(?:\d+(?:\.\d*)?|\.\d+)(?:E[+-]?\d+)?|[\s=<>+*/^&%(),;{}-]+/iy;
+  var dynamicAddressFunctions = /^(?:IMPORTRANGE|OFFSET)$/i;
+  var addressContextFunctions = /^(?:CELL|COLUMN|FORMULATEXT|QUERY)$/i;
+  function columnNumber(reference) {
+    return reference.match(/^\$?([A-Z]+)/i)[1].toUpperCase().split('').reduce(function (n, letter) {
+      return n*26 + letter.charCodeAt(0)-64;
+    },0);
+  }
+  function remapReference(match) {
+    var qualifier = match[2];
+    var first = match[3] || match[5];
+    var referencedTab = qualifier && qualifier.replace(/^'|'$/g,'').replace(/''/g,"'");
+    if (first && (!referencedTab || referencedTab.toLowerCase() === tabName.toLowerCase())) {
+      var start = columnNumber(first), end = match[4] ? columnNumber(match[4]) : start;
+      // AF gains a new meaning and a range spanning AE cannot keep its old cells
+      // in a single contiguous range after AE moves.
+      if (Math.min(start,end) <= 32 && Math.max(start,end) >= 31) {
+        if (start !== 31 || end !== 31) throw Error('unsupported_filter_formula');
+        var prefixLength = qualifier ? qualifier.length+1 : 0;
+        return match[0].slice(0,prefixLength) + match[0].slice(prefixLength).replace(/AE/gi,'AF');
+      }
+    }
+    return match[0];
+  }
+  var rewritten = '=', offset = 1, usesAddressContext = false;
+  while (offset < formula.length) {
+    token.lastIndex = offset;
+    var match = token.exec(formula);
+    if (!match || dynamicAddressFunctions.test(match[1])) throw Error('unsupported_filter_formula');
+    if (addressContextFunctions.test(match[1])) usesAddressContext = true;
+    offset = token.lastIndex;
+    if (match[1] && match[1].toUpperCase() === 'INDIRECT') {
+      var literal = /^\(\s*"((?:[^"]|"")*)"\s*(?:[,;]\s*TRUE\s*)?\)/i.exec(formula.slice(offset));
+      if (!literal) throw Error('unsupported_filter_formula');
+      var target = literal[1].replace(/""/g,'"');
+      var reference = new RegExp(token.source,token.flags).exec(target);
+      if (!reference || !(reference[3] || reference[5]) || reference[0] !== target || remapReference(reference) !== target) {
+        throw Error('unsupported_filter_formula');
+      }
+    }
+    rewritten += remapReference(match);
+  }
+  if (usesAddressContext && (movesColumn || rewritten !== formula)) throw Error('unsupported_filter_formula');
+  return rewritten;
+}
+function seminarCupsMigrationCriteria(filter, displayColumn, tabName) {
+  var criteria = [];
+  if (!filter) return criteria;
   var range = filter.getRange();
   if (range.getRow() !== 1 || range.getColumn() !== 1 || range.getNumColumns() > SEMINAR_HEADERS.length) throw Error('unsupported_filter_layout');
-  var criteria = [];
   for (var col=1;col<=range.getNumColumns();col++) {
-    var criterion = filter.getColumnFilterCriteria(col);
-    if (criterion && criterion.getCriteriaType() === SpreadsheetApp.BooleanCriteria.CUSTOM_FORMULA) throw Error('unsupported_filter_formula');
-    criteria[col] = criterion;
+    criteria[col] = filter.getColumnFilterCriteria(col);
   }
   if (criteria[displayColumn] && criteria[displayColumn+1]) throw Error('payment_filter_conflict');
+  var paymentCriterion = criteria[displayColumn];
+  if (paymentCriterion) {
+    criteria[displayColumn] = null;
+    criteria[displayColumn+1] = paymentCriterion;
+  }
+  return criteria.map(function (criterion, col) {
+    var type = SpreadsheetApp.BooleanCriteria.CUSTOM_FORMULA;
+    if (!criterion || criterion.getCriteriaType() !== type) return criterion;
+    var args = criterion.getCriteriaValues();
+    if (!Array.isArray(args) || args.length !== 1) throw Error('unsupported_filter_formula');
+    var formula = seminarMigrateCupsFilterFormula(args[0],tabName,Boolean(paymentCriterion && col === displayColumn+1));
+    return formula === args[0] ? criterion : criterion.copy().withCriteria(type,[formula]).build();
+  });
 }
 function migrateCupsnballsSheet() {
   var config = seminarConfig('cupsnballs'), lock = LockService.getScriptLock();
@@ -323,7 +388,7 @@ function migrateCupsnballsSheet() {
     if (sheet.getLastRow() !== 1) throw Error('existing_rows_preserved');
 
     var displayColumn = seminarColumn(CUPSNBALLS_DISPLAY_COLUMN)+1;
-    seminarCheckCupsMigrationFilter(sheet.getFilter(),displayColumn);
+    var criteria = seminarCupsMigrationCriteria(sheet.getFilter(),displayColumn,config.tab);
     if (sheet.getMaxColumns() < SEMINAR_HEADERS.length) sheet.insertColumnsAfter(sheet.getMaxColumns(),SEMINAR_HEADERS.length-sheet.getMaxColumns());
     if (sheet.getMaxRows() < 2) sheet.insertRowsAfter(sheet.getMaxRows(),2-sheet.getMaxRows());
     var displayRange = sheet.getRange(1,displayColumn,sheet.getMaxRows(),1);
@@ -334,7 +399,7 @@ function migrateCupsnballsSheet() {
       if (protection.canDomainEdit()) protection.setDomainEdit(false);
     }
     // Finish preparing the new columns before changing the old header.
-    seminarExpandCups(sheet,sheet.getMaxRows(),displayColumn);
+    seminarExpandCups(sheet,sheet.getMaxRows(),criteria);
     sheet.getRange(1,displayColumn,1,2).setValues([[CUPSNBALLS_DISPLAY_COLUMN,'입금']]);
     SpreadsheetApp.flush();
   } finally { lock.releaseLock(); }
