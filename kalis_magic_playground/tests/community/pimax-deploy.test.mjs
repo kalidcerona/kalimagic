@@ -1,4 +1,5 @@
 import { assertPinnedSnapshot } from './public-snapshot-pins.mjs';
+import { injectZzImport, transformZzImportWorker, zzImportFiles } from '../../scripts/zz-import-build.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile, readdir, stat } from 'node:fs/promises';
@@ -174,11 +175,14 @@ test('Pi Max distribution HTML injects a live access check during the build', as
 // Full-suite build tests own dist generation. This check runs explicitly after the isolated build.
 test('Pi Max built trees contain only runtime files with valid HTML, module, manifest and SW references', { skip: process.env.PIMAX_VERIFY_DIST !== '1' }, async () => {
   for (const route of ['dist/tools/pimax']) {
-    assert.deepEqual((await readdir(new URL(`../../${route}/`, import.meta.url))).sort(), [...PIMAX_FILES].sort());
+    assert.deepEqual((await readdir(new URL(`../../${route}/`, import.meta.url))).sort(), [...PIMAX_FILES, 'zz-import'].sort());
+    const imports = zzImportFiles('pimax');
+    assert.deepEqual((await readdir(new URL(`../../${route}/zz-import/`, import.meta.url))).sort(), [...imports].sort());
+    for (const file of imports) assert.deepEqual(await read(`${route}/zz-import`, file), await read('zz-import', file));
     const html = (await read(route, 'index.html')).toString();
     const sourceHtml = (await read(shared, 'index.html')).toString();
     const app = DISTRIBUTION_APPS.find(entry => entry.target === 'pimax');
-    assert.equal(html, transformDistributionDocument(sourceHtml, app));
+    assert.equal(html, injectZzImport(transformDistributionDocument(sourceHtml, app), app.target));
     assert.equal(html.includes('friend-apps-check'), true);
     const manifest = JSON.parse((await read(route, 'manifest.webmanifest')).toString());
     assert.equal(manifest.scope, './');
@@ -199,6 +203,7 @@ test('Pi Max built trees contain only runtime files with valid HTML, module, man
     for (const file of PIMAX_FILES.filter(f => !['index.html', 'manifest.webmanifest'].includes(f))) {
       const expected = await read(shared, file);
       if (file === 'app.mjs') assert.equal((await read(route, file)).toString(), preparePimaxRuntime(expected.toString()));
+      else if (file === 'sw.js') assert.equal(sw, transformZzImportWorker(expected.toString(), app.target));
       else assert.deepEqual(await read(route, file), expected);
     }
   }

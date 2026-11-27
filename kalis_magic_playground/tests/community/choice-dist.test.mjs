@@ -1,3 +1,4 @@
+import { zzImportFiles } from '../../scripts/zz-import-build.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile, readdir, stat } from 'node:fs/promises';
@@ -110,7 +111,9 @@ test('Choice login, hosting, migration and both new admin grants are registered'
 // Build tests generate dist in the full suite; run this explicitly after npm run build.
 test('Choice built distribution injects its access check and publishes every shell asset without tests', { skip: process.env.CHOICE_VERIFY_DIST !== '1' }, async () => {
   const route = 'dist/tools/choice';
-  assert.deepEqual(await filesUnder(route), await filesUnder(shared));
+  const imports = zzImportFiles('choice').map(file => `zz-import/${file}`);
+  assert.deepEqual(await filesUnder(route), [...await filesUnder(shared), ...imports].sort());
+  for (const file of imports) assert.deepEqual(await read(`${route}/${file}`), await read(file));
   const html = (await read(`${route}/index.html`)).toString();
   assert.match(html, /id="friend-apps-check"/);
   assert.match(html, /fetch\('\/tools\/_check\?tool=choice'/);
