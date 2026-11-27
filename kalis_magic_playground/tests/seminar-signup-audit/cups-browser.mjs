@@ -19,6 +19,39 @@ try {
   const page = await browser.newPage({reducedMotion:'reduce'});
   page.setDefaultTimeout(5000);
   const errors = [];
+  const landing = await browser.newPage({timezoneId:'America/Los_Angeles'});
+  landing.on('pageerror', error => errors.push(error.message));
+  await landing.route('**/*', route => new URL(route.request().url()).origin === origin.origin
+    ? route.continue() : route.abort());
+  const boundaries = [
+    ['2026-11-27T18:00:00+09:00', null, '50,000원'],
+    ['2026-12-07T00:00:00+09:00', '50,000원', '60,000원'],
+    ['2026-12-14T00:00:00+09:00', '60,000원', '70,000원'],
+    ['2026-12-19T00:00:00+09:00', '70,000원', null]
+  ];
+  async function checkTier(amount) {
+    assert.deepEqual(await landing.locator('.ticket-prices .current .amount').allTextContents(), amount ? [amount] : []);
+    assert.equal(await landing.locator('.current .current-marker').count(), amount ? 1 : 0);
+    assert.equal(await landing.locator('.pill-cta.wide').textContent(), amount ? amount + '에 자리 신청하기' : '자리 신청하기');
+  }
+  await landing.clock.install({time:new Date('2026-11-26T00:00:00+09:00')});
+  for (const [boundary, before, after] of boundaries) {
+    await landing.clock.pauseAt(new Date(Date.parse(boundary) - 1000));
+    await landing.goto(new URL('/cupsnballs/', origin).href);
+    await checkTier(before);
+    if (!before) {
+      assert.equal(await landing.locator('.ticket-period').first().textContent(), '11월 27일 18:00부터 (12월 6일까지)');
+      assert.equal(await landing.locator('.fee-next').textContent(), '11월 27일 18:00부터 50,000원');
+    }
+    await landing.clock.runFor(1000);
+    await checkTier(after);
+    if (!after) {
+      assert.equal(await landing.locator('.fee-hint').textContent(), '요금 적용 기간 종료');
+      assert.equal(await landing.locator('.fee-next').textContent(), '');
+    }
+  }
+  await landing.close();
+  console.log('PASS landing: opening, both price changes and closing at KST boundaries');
   const submissions = [];
   page.on('pageerror', error => errors.push(error.message));
   let now = new Date('2026-11-27T18:00:00+09:00');

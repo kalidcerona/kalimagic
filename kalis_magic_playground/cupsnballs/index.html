@@ -197,7 +197,7 @@
               <span class="tier">슈퍼 얼리버드</span>
             </dt>
             <dd class="amount">50,000<span>원</span></dd>
-            <dd class="ticket-period"><time datetime="2026-12-06">12월 6일</time>까지</dd>
+            <dd class="ticket-period"><time datetime="2026-11-27T18:00:00+09:00">11월 27일 18:00</time>부터 (<time datetime="2026-12-06">12월 6일</time>까지)</dd>
           </div>
           <div>
             <dt>
@@ -205,7 +205,7 @@
               <span class="tier">얼리버드</span>
             </dt>
             <dd class="amount">60,000<span>원</span></dd>
-            <dd class="ticket-period"><time datetime="2026-12-07">12월 7일</time> – <time datetime="2026-12-13">12월 13일</time></dd>
+            <dd class="ticket-period"><time datetime="2026-12-07T00:00:00+09:00">12월 7일</time> – <time datetime="2026-12-13">12월 13일</time></dd>
           </div>
           <div>
             <dt>
@@ -213,7 +213,7 @@
               <span class="tier">정가</span>
             </dt>
             <dd class="amount">70,000<span>원</span></dd>
-            <dd class="ticket-period"><time datetime="2026-12-14">12월 14일</time> – <time datetime="2026-12-18">12월 18일</time></dd>
+            <dd class="ticket-period"><time datetime="2026-12-14T00:00:00+09:00">12월 14일</time> – <time datetime="2026-12-18">12월 18일</time></dd>
           </div>
         </dl>
         <p class="fee-next" aria-live="polite"></p>
@@ -231,23 +231,20 @@
   <script>
     const periods = Array.from(document.querySelectorAll(".ticket-prices > div"), row => {
       const [start, end] = row.querySelectorAll("time");
-      return { row, start, end, amount: row.querySelector(".amount").textContent };
+      const startsAt = Date.parse(start.dateTime);
+      const endsAt = Date.parse(end.dateTime + "T00:00:00+09:00") + 86400000;
+      return { row, start, startsAt, endsAt, amount: row.querySelector(".amount").textContent };
     });
     const cta = document.querySelector(".pill-cta.wide");
     const feeHint = document.querySelector(".fee-hint");
     const nextNote = document.querySelector(".fee-next");
-    const seoulDate = new Intl.DateTimeFormat("en-US", {
-      timeZone: "Asia/Seoul", year: "numeric", month: "2-digit", day: "2-digit"
-    });
-    let midnightTimer;
+    let feeTimer;
 
     function refreshFees() {
-      clearTimeout(midnightTimer);
-      const now = new Date();
-      const date = Object.fromEntries(seoulDate.formatToParts(now).map(part => [part.type, part.value]));
-      const today = [date.year, date.month, date.day].join("-");
-      const current = periods.find(p => p.start.dateTime <= today && today <= p.end.dateTime);
-      const next = periods.find(p => today < p.start.dateTime);
+      clearTimeout(feeTimer);
+      const now = Date.now();
+      const current = periods.find(p => p.startsAt <= now && now < p.endsAt);
+      const next = periods.find(p => now < p.startsAt);
       for (const { row } of periods) {
         row.classList.remove("current");
         row.querySelector(".current-marker")?.remove();
@@ -266,9 +263,8 @@
       }
       nextNote.textContent = next ? next.start.textContent + "부터 " + next.amount : "";
 
-      // Seoul midnight is 15:00 UTC on the preceding calendar date.
-      const nextMidnight = Date.UTC(date.year, Number(date.month) - 1, date.day, 15);
-      midnightTimer = setTimeout(refreshFees, nextMidnight - now.getTime());
+      const boundary = current?.endsAt ?? next?.startsAt;
+      if (boundary) feeTimer = setTimeout(refreshFees, Math.min(boundary - now, 86400000));
     }
 
     document.addEventListener("visibilitychange", () => {
