@@ -187,7 +187,14 @@ export function createEntry(eventId, isLocked) {
     get recovering() { return recovering; },
     remember(original) {
       const {account, key, payload, renewAgreement} = original;
-      sessionStorage.setItem(pendingKey, JSON.stringify({account, key, payload, renewAgreement:renewAgreement === true}));
+      try {
+        sessionStorage.setItem(pendingKey, JSON.stringify({account, key, payload, renewAgreement:renewAgreement === true}));
+        $('memory-recovery-hint').hidden = true;
+      } catch (error) {
+        if (account) throw error;
+        // The form retains the original guest attempt until it gets a definitive answer.
+        $('memory-recovery-hint').hidden = false;
+      }
     },
     restore() {
       let stored;

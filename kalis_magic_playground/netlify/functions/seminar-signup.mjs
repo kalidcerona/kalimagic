@@ -51,12 +51,8 @@ export function createHandler(deps = {}) {
       const availabilityState = now >= Date.parse(settings.closesAt) ? 'ended' : 'unavailable';
       return json(403, {error:'signup_closed', availabilityState});
     }
-    // Even injected stores cannot turn an incompletely configured deployment into an open sale.
-    if (!configured(settings)) {
-      // A linked retry needs an authoritative store lookup before its draft can be cleared.
-      if (body?.signupMode === 'member') return json(503, {error:'service_unavailable'});
-      return closedResponse();
-    }
+    // Only the roster can confirm whether an earlier submission was accepted.
+    if (!configured(settings)) return json(503, {error:'service_unavailable'});
     try {
       const ip = request.requestContext?.identity?.sourceIp || headers['x-nf-client-connection-ip'];
       const member = await verifiedMember(headers,body,deps);

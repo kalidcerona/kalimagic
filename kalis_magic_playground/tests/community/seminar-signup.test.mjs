@@ -89,7 +89,9 @@ test('HTTP rejects wrong method/origin/content/body and missing config without t
   assert.equal((await handler(request(undefined,{body:'{'}))).statusCode,400);
   let called=false;
   const closed=createHandler({config:{...config,account:'[계좌번호]'},store:{submit:()=>{called=true;}}});
-  assert.equal((await closed(request())).statusCode,403);
+  const guest = await closed(request());
+  assert.equal(guest.statusCode,503);
+  assert.equal(JSON.parse(guest.body).error,'service_unavailable');
   const linked = request(input({signupMode:'member',linkageConsent:true}));
   linked.headers.authorization = 'Bearer fixture';
   assert.equal((await closed(linked)).statusCode,503);
@@ -203,14 +205,14 @@ test('all-zero account refuses public offer and direct POST without any writes i
     const publicResponse=await createOfferHandler(settings,()=>now)({httpMethod:'GET'});
     assert.equal(JSON.parse(publicResponse.body).open,false);
     const response=await createHandler({config:settings,now:()=>now,store:{submit:async()=>{writes++;}}})(request());
-    assert.equal(response.statusCode,403); assert.equal(writes,0);
+    assert.equal(response.statusCode,503); assert.equal(writes,0);
   }
 });
 test('isolated test mode needs an explicit allowlisted deployment and marks successful receipt', async () => {
   for(const patch of [{testMode:false},{testSheetsUrl:undefined},{testSheetsUrl:'https://script.google.com/macros/s/different-test/exec'}]) {
     let writes=0; const settings={...config,...patch};
     assert.equal(getOffer(now,settings).open,false);
-    assert.equal((await createHandler({config:settings,now:()=>now,store:{submit:async()=>{writes++;}}})(request())).statusCode,403);
+    assert.equal((await createHandler({config:settings,now:()=>now,store:{submit:async()=>{writes++;}}})(request())).statusCode,503);
     assert.equal(writes,0);
   }
   const response=await createHandler({config,now:()=>now,store:memory()})(request());
@@ -226,7 +228,7 @@ test('Netlify production and unknown deployment context cannot enable isolated t
       Object.assign(process.env,values); let writes=0;
       assert.equal(getOffer(now,config).open,false);
       const response=await createHandler({config,now:()=>now,store:{submit:async()=>{writes++;}}})(request());
-      assert.equal(response.statusCode,403); assert.equal(writes,0);
+      assert.equal(response.statusCode,503); assert.equal(writes,0);
     }
     for (const preview of ['deploy-preview','branch-deploy']) {
       Object.assign(process.env,{NETLIFY:'true',CONTEXT:preview,NODE_ENV:'production'});
@@ -305,7 +307,7 @@ test('missing bank and either notice or version closes offer and POST without tr
       const settings={...config,[key]:value};let calls=0;
       assert.equal(getOffer(now,settings).open,false,key);
       const response=await createHandler({config:settings,now:()=>now,store:{submit:async()=>{calls++;}}})(request());
-      assert.equal(response.statusCode,403,key);assert.equal(calls,0,key);
+      assert.equal(response.statusCode,503,key);assert.equal(calls,0,key);
     }
   }
 });

@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import {createRequire} from 'node:module';
 import path from 'node:path';
 import {cupsnballs, event, getOffer} from '../../netlify/functions/_lib/seminar-events.mjs';
+import {createHandler} from '../../netlify/functions/seminar-signup.mjs';
+import {createLocalSheet} from '../support/seminar-sheet.mjs';
 const require = createRequire(import.meta.url);
 const output = process.env.SEMINAR_AUDIT_DIR ? require('./output-dir.cjs') : null;
 const {chromium} = require(process.env.PLAYWRIGHT_CORE_PATH || 'playwright-core');
@@ -187,26 +189,74 @@ try {
       assert.equal(await page.inputValue('#name'),'테스트 참가자');
       assert.equal(await page.isChecked('#reason-reviews'),true);
       await fill();
-      let saved;
-      const rows = new Map();
-      await page.route('**/api/seminars/signup', async route => {
-        const body = route.request().postDataJSON();
-        rows.set(body.idempotencyKey, body);
-        if (saved) return route.fallback();
-        saved = body;
-        const pending = await page.evaluate(id => JSON.parse(sessionStorage.getItem('seminar-pending-member:'+id)),config.id);
-        assert.deepEqual({...pending.payload,idempotencyKey:pending.key},saved);
-        await route.abort();
-      }, {times:2});
+      const sheetsUrl = 'https://script.google.com/macros/s/local-test/exec';
+      const settings = {...config, enabled:true, memberLinkageEnabled:false, testMode:true, sheetsUrl, testSheetsUrl:sheetsUrl,
+        account:'000000000000', holder:'테스트', contact:'테스트 문의', signingSecret:'local-signing-secret-at-least-32-bytes',
+        hmacSecret:'local-hmac-secret-at-least-32-bytes'};
+      const sheet = createLocalSheet({eventId:config.id, now:Date.parse(now), secret:settings.signingSecret, properties:{
+        CUPSNBALLS_SHEET_ID:'local-test-sheet', CUPSNBALLS_SHEETS_SIGNING_SECRET:settings.signingSecret,
+        CUPSNBALLS_CONSENT_VERSION:config.consentVersion, CUPSNBALLS_LINKAGE_CONSENT_VERSION:config.consentVersion}});
+      const handler = createHandler({config:settings, store:sheet, now:()=>new Date(now)});
+      const calls = [], receipts = [];
+      let loseResponse = true;
+      const submitGuest = async route => {
+        const request = route.request();
+        calls.push(request.postDataJSON());
+        const response = await handler({httpMethod:'POST', rawUrl:request.url(), headers:{origin:origin.origin,'content-type':'application/json'},
+          body:request.postData(), requestContext:{identity:{sourceIp:'127.0.0.1'}}});
+        if (response.statusCode === 200) receipts.push(JSON.parse(response.body).receipt);
+        if (loseResponse) { loseResponse = false; return route.abort(); }
+        return route.fulfill({status:response.statusCode, contentType:'application/json', body:response.body});
+      };
+      const pending = () => page.evaluate(id => JSON.parse(sessionStorage.getItem('seminar-pending-member:'+id)), config.id);
+      await page.route('**/api/seminars/signup', submitGuest);
       await page.click('#submit');
       await page.waitForSelector('#check-original');
+      const original = await pending();
+      assert.deepEqual({...original.payload,idempotencyKey:original.key},calls[0]);
       await page.reload();
+      settings.sheetsUrl = '';
+      for (const outage of ['missing configuration','roster lock unavailable']) {
+        if (outage === 'roster lock unavailable') {
+          settings.sheetsUrl = sheetsUrl;
+          sheet.state.lockUnavailable = true;
+        }
+        const response = page.waitForResponse(r => r.url().endsWith('/api/seminars/signup'));
+        await page.click('#recovery-check');
+        assert.equal((await response).status(),503,outage);
+        await page.waitForFunction(() => !document.querySelector('#recovery-check').disabled);
+        assert.deepEqual(await pending(),original,outage);
+      }
+      sheet.state.lockUnavailable = false;
       await page.click('#recovery-check');
       await page.waitForSelector('#success');
-      assert.equal(rows.size,1);
-      assert.deepEqual(posts.at(-1).body,saved);
-      assert.equal(posts.at(-1).token,undefined);
-      assert.equal(await page.evaluate(id => sessionStorage.getItem('seminar-pending-member:'+id),config.id),null);
+      assert.deepEqual(calls,Array(4).fill(calls[0]));
+      assert.deepEqual(receipts,[receipts[0],receipts[0]]);
+      assert.equal(sheet.state.rows.length,2); // Header and one registration.
+      assert.equal(await pending(),null);
+
+      offer.memberLinkageEnabled = false;
+      for (const drop of [false,true]) {
+        if (cups) await page.click('#new-signup');
+        await page.goto(url.href);
+        await page.evaluate(() => Object.defineProperty(window,'sessionStorage',{
+          get() { throw new DOMException('Storage blocked','SecurityError'); }
+        }));
+        await fill();
+        const beforePosts = calls.length, beforeRows = sheet.state.rows.length;
+        loseResponse = drop;
+        await page.click('#submit');
+        if (drop) {
+          await page.waitForSelector('#memory-recovery-hint');
+          assert.match(await page.textContent('#memory-recovery-hint'),/운영자/);
+          await page.click('#check-original');
+        }
+        await page.waitForSelector('#success');
+        assert.equal(calls.length-beforePosts,drop ? 2 : 1);
+        assert.equal(sheet.state.rows.length-beforeRows,1);
+        if (drop) assert.deepEqual(calls.at(-1),calls.at(-2));
+      }
+      await page.unroute('**/api/seminars/signup',submitGuest);
       if (cups) await page.click('#new-signup');
       for (const scenario of ['missing','expired','error','closed','disabled']) {
         offer.open = scenario !== 'closed';
