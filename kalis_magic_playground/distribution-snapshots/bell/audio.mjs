@@ -3,7 +3,7 @@ import { preset } from './presets.mjs';
 const bellNoiseBand = [3000, 8000];
 const knockSound = {
   hz: [240, 615], weights: [1, .42], decay: [.021, .010],
-  level: .16, noise: .42, noiseBand: [500, 1800],
+  level: .24, noise: .42, noiseBand: [500, 1800],
 };
 
 function strike(context, sound, voices, onStarted) {

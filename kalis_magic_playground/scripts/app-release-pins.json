@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "release": "apps-zz-public-20261127",
+  "release": "apps-7317bb6b2c8a364066c35184e4feb1cc647d3c8c-bell-thump",
   "provenance": "Canonical public distribution snapshots from the selected site release.",
   "roots": [
     "distribution-snapshots/aletheia",
@@ -814,7 +814,7 @@
       "path": "distribution-snapshots/bell/audio.mjs",
       "kind": "file",
       "size": 3534,
-      "sha256": "09b2c06851fce80c30891cab663ce789d0f380b089f216ec00d899a4cf8538f3"
+      "sha256": "13579462d4c3bd47097f07f55657f8bc524d9c35236be8755e37947b10beb4ab"
     },
     {
       "path": "distribution-snapshots/bell/card-rider-blue.jpg",
@@ -939,8 +939,8 @@
     {
       "path": "distribution-snapshots/bell/sw.js",
       "kind": "file",
-      "size": 5545,
-      "sha256": "d8359b9e14b42467950a3a2e17bfe7ec20cb494d885052f00b4ea4e8a718602f"
+      "size": 5543,
+      "sha256": "c9f3d124e8eeab31dbc597ee79ca6c2f7175d59b841a60afa248eb3face60a60"
     },
     {
       "path": "distribution-snapshots/bell/vibration.mjs",

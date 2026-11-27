@@ -99,7 +99,12 @@ test('first gesture resumes audio, four partials per strike, third fades the old
   await synth.knock();
   const knock = oscillators.slice(12);
   assert.deepEqual(knock.map(o => o.frequency.value), [240, 615]);
-  assert.ok(knock.every(o => o.stops[0] - device.currentTime < .035));
+  assert.deepEqual(knock.map(o => o.stops[0]), [3 + .003 + .021 + .010, 3 + .003 + .010 + .010]);
+  const [lowPartial, highPartial, noiseGain] = buses.slice(-3);
+  const lowPeak = lowPartial.gain.events[1][0];
+  const highPeak = highPartial.gain.events[1][0];
+  assert.ok(Math.abs(lowPeak + highPeak - .24) < 1e-9);
+  assert.ok(Math.abs(noiseGain.gain.events[0][0] - .24 * .42 / 1.42) < 1e-9);
   assert.equal(noises.length, 3);
 });
 
