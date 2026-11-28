@@ -150,6 +150,14 @@ body.archive-room .pg-detail-head h2::after {
   box-shadow: 0 0 18px rgba(201, 154, 91, 0.28);
 }
 
+.mypage-shell section:empty {
+  display: none;
+}
+
+body.archive-room .mypage-shell .pgw-title::after {
+  box-shadow: none;
+}
+
 body.archive-room .phm-sidebar-desc,
 body.archive-room .phm-feed-header p,
 body.archive-room .pg-row-preview,

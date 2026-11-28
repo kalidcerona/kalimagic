@@ -40,20 +40,14 @@ test('mypage html loads the shared auth/nav stack and mypage module', () => {
   );
 });
 
-test('mypage module loads profile, handles auth, tabs, and post navigation', () => {
+test('mypage loads profile and auth without mounting activity or quest views', () => {
   const js = source('mypage.js');
 
   assert.match(js, /MagicAuth\.getSession/);
   assert.match(js, /MagicAuth\.login/);
   assert.match(js, /\/\.netlify\/functions\/profile/);
-  assert.match(js, /\/\.netlify\/functions\/my-activity\?tab=/);
-  assert.match(js, /data-mypage-tab="posts"/);
-  assert.match(js, /data-mypage-tab="received"/);
-  assert.match(js, /data-mypage-tab="given"/);
-  assert.match(js, /'\/p\/'/);
-  assert.match(js, /encodeURIComponent\(id\)/);
-  assert.match(js, /clickableCard\(card, item\.id\)/);
-  assert.match(js, /clickableCard\(card, item\.postId\)/);
+  assert.doesNotMatch(source('mypage.html'), /data-mypage-(tabs|list|quest-badges)/);
+  assert.doesNotMatch(js.slice(js.indexOf('async function init()')), /load(Activity|QuestBadges)|renderTabs/);
   assert.match(js, /이미 사용 중인 닉네임입니다/);
 });
 
@@ -65,14 +59,14 @@ test('nickname onboarding checks nicknameSet once per session and handles duplic
   assert.match(js, /nicknameSet\s*===\s*false/);
   assert.match(js, /sessionStorage/);
   assert.match(js, /nickname-onboarding-shown/);
-  assert.match(js, /커뮤니티에서 쓸 닉네임을 정해 주십시오/);
+  assert.match(js, /사이트에서 사용할 닉네임을 정해 주십시오/);
   assert.match(js, /이미 사용 중인 닉네임입니다/);
   assert.match(js, /error\.code\s*===\s*'nickname_taken'/);
 });
 
-test('playground, post, and mypage pages include nickname onboarding', () => {
-  for (const path of ['playground.html', 'post.html', 'mypage.html']) {
-    assert.match(source(path), /src="nickname-onboarding\.js"/, `${path} should load nickname onboarding`);
+test('paused pages have no nickname onboarding', () => {
+  for (const path of ['playground.html', 'write.html', 'post.html']) {
+    assert.doesNotMatch(source(path), /nickname-onboarding/);
   }
 });
 

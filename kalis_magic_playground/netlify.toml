@@ -9,9 +9,6 @@
 [functions]
   node_bundler = "esbuild"
 
-[functions.post-og]
-  included_files = ["post.html"]
-
 [[edge_functions]]
   path = "/tools/*"
   function = "tools-gate"
@@ -36,16 +33,34 @@
   status = 200
 
 [[redirects]]
-  from = "/post.html"
-  to = "/p/:id"
-  status = 301
+  from = "/p"
+  to = "/playground.html"
+  status = 200
   force = true
-  query = { id = ":id" }
 
 [[redirects]]
   from = "/p/:id"
-  to = "/.netlify/functions/post-og?id=:id"
+  to = "/playground.html"
   status = 200
+  force = true
+
+[[redirects]]
+  from = "/post"
+  to = "/playground.html"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/write"
+  to = "/playground.html"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/playground"
+  to = "/playground.html"
+  status = 200
+  force = true
 
 [[headers]]
   for = "/*"

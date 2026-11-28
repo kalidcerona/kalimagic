@@ -7,23 +7,11 @@ import { fileURLToPath } from 'node:url';
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const read = (p) => readFileSync(join(root, p), 'utf8');
 
-test('write page exists with auth->api->compose->bootstrap order', () => {
-  const html = read('write.html');
-  const order = ['auth.js', 'playground-api.js', 'playground-compose.js', 'write.js']
-    .map((s) => html.indexOf(`src="${s}"`));
-  assert.deepEqual(order, order.slice().sort((a, b) => a - b));
-  assert.equal(order.every((i) => i > -1), true);
-  assert.match(html, /data-write-login/);
-  assert.match(html, /data-question-form|data-write-compose/);
-});
-
-test('post page exists with auth->api->detail->bootstrap order', () => {
-  const html = read('post.html');
-  const order = ['auth.js', 'playground-api.js', 'playground-detail.js', 'post.js']
-    .map((s) => html.indexOf(`src="${s}"`));
-  assert.deepEqual(order, order.slice().sort((a, b) => a - b));
-  assert.equal(order.every((i) => i > -1), true);
-  assert.match(html, /data-post-detail/);
+test('write and detail pages serve the scriptless notice', () => {
+  for (const page of ['write.html', 'post.html']) {
+    assert.equal(read(page), read('playground.html'));
+    assert.doesNotMatch(read(page), /<script|data-post-detail|data-write-compose/);
+  }
 });
 
 test('list rows navigate to the OG post route and include body preview', () => {

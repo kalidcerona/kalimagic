@@ -11,19 +11,11 @@ const LANDING_PAGES = [
     { key: 'lesson', label: '레슨', href: 'lesson.html', cta: true },
 ];
 
-const COMMUNITY_PAGES = [
-    { key: 'playground', label: '전체 기록', href: 'playground.html', activeOn: ['playground', 'post', 'admin'] },
-    { key: 'write', label: '기록 남기기', href: 'write.html' },
-];
-
-const COMMUNITY_PAGE_KEYS = new Set(['playground', 'post', 'write', 'mypage', 'admin']);
 const NAV_PROFILE_CACHE_KEY = 'kali-nav-profile';
 
 function renderNav(activePage) {
-    const isCommunityPage = COMMUNITY_PAGE_KEYS.has(activePage);
-    const pages = isCommunityPage ? COMMUNITY_PAGES : LANDING_PAGES;
-    const links = pages.map(({ key, label, href, cta, activeOn }) => {
-        const isActive = key === activePage || (activeOn || []).includes(activePage);
+    const links = LANDING_PAGES.map(({ key, label, href, cta }) => {
+        const isActive = key === activePage;
         const cls = ['nav-link', cta && 'nav-cta', isActive && 'active']
             .filter(Boolean).join(' ');
         const current = isActive ? ' aria-current="page"' : '';
@@ -33,10 +25,11 @@ function renderNav(activePage) {
     const root = document.getElementById('nav-root');
     if (!root) return;  // nav-root 없는 페이지에서 null deref 가드
     root.className = 'main-nav';
-    root.dataset.space = isCommunityPage ? 'archive' : 'landing';
+    const accountPage = activePage === 'mypage' || activePage === 'admin';
+    root.dataset.space = accountPage ? 'archive' : 'landing';
     root.innerHTML = '<div class="nav-brand"><a href="index.html" class="nav-logo">KALI</a>' +
         '</div><nav class="nav-links">' + links + '</nav>';
-    if (isCommunityPage) renderLoggedInNavLinks(root, activePage);
+    if (accountPage) renderLoggedInNavLinks(root, activePage);
 }
 
 function readCachedNavProfile(userId) {
@@ -115,6 +108,9 @@ async function renderLoggedInNavLinks(root, activePage) {
         link.href = 'mypage.html';
         link.className = ['nav-link', 'nav-profile', activePage === 'mypage' && 'active'].filter(Boolean).join(' ');
         link.dataset.navMypage = 'true';
+        link.addEventListener('focus', () => {
+            if (nav.scrollWidth > nav.clientWidth) link.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'instant' });
+        });
         if (activePage === 'mypage') link.setAttribute('aria-current', 'page');
         link.textContent = '마이페이지';
         nav.appendChild(link);

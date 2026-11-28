@@ -1,3 +1,4 @@
+import { communityPaused, pausedWrite } from './_lib/community-pause.mjs';
 import { canAnswerQuestion, canPublishAnswer } from './_lib/access-policy.mjs';
 import { requireViewer } from './_lib/auth.mjs';
 import { bodyField, postTag, purgeOnWrite } from './_lib/cache.mjs';
@@ -31,6 +32,7 @@ async function hasExistingAnswer(supabase, questionPostId) {
 }
 
 async function answersHandler(event) {
+  if (communityPaused && event.httpMethod === 'POST') return pausedWrite();
   if (event.httpMethod !== 'POST') return json(405, { error: 'method_not_allowed' });
 
   let viewer;

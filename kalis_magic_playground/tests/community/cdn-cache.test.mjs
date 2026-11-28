@@ -150,9 +150,9 @@ test('writes purge: successful writes purge, failed writes and reads do not', as
 test('real write handlers do not purge when the write is rejected', async (t) => {
   const purges = installFakeFetch(t);
   const created = await postsHandler({ httpMethod: 'POST', headers: {}, body: '{}' });
-  assert.equal(created.statusCode, 401);
+  assert.equal(created.statusCode, 503);
   const commented = await commentsHandler({ httpMethod: 'POST', headers: {}, body: '{}' });
-  assert.equal(commented.statusCode, 401);
+  assert.equal(commented.statusCode, 503);
   assert.equal(purges.length, 0);
 });
 

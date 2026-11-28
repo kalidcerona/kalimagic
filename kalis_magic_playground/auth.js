@@ -114,7 +114,7 @@
         dialog.setAttribute('aria-labelledby', 'signup-dialog-title');
         dialog.innerHTML = '<h2 id="signup-dialog-title">사용할 계정을 확인해 주십시오</h2>' +
           '<p>로그인한 계정: <strong data-account></strong></p>' +
-          '<p>활동 전에 <a href="/mypage.html">마이페이지에서 닉네임</a>을 확인해 주십시오. 익명 글에도 작성자 식별자는 저장됩니다.</p>' +
+          '<p><a href="/mypage.html">마이페이지에서 닉네임</a>을 확인해 주십시오.</p>' +
           '<p>정보 이용과 서비스 기준: ' + policyLinks + '</p><form method="dialog"><button autofocus value="continue">확인하고 계속하기</button>' +
           '<button value="switch">다른 계정 사용하기</button><button value="cancel">취소하기</button></form>';
         dialog.querySelector('[data-account]').textContent = user.email || '';

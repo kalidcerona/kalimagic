@@ -29,23 +29,23 @@ checks = 0
 def test_magic_playground_static_files_exist():
     playground = (ROOT / "playground.html").read_text(encoding="utf-8")
     nav = (ROOT / "nav.js").read_text(encoding="utf-8")
-    style = (ROOT / "style.css").read_text(encoding="utf-8")
-    check("마술문화 기록소" in playground, "[놀이터] playground.html 제목 없음")
-    check("playground.js" in playground, "[놀이터] playground.js 로드 없음")
-    check("auth.js" in playground, "[놀이터] auth.js 로드 없음")
-    check("data-post-list" in playground, "[놀이터] 게시글 목록 영역 없음")
-    check("data-write-link" in playground and "write.html" in playground, "[놀이터] 글쓰기 링크 없음")
-    check("playground.html" in nav, "[놀이터] nav.js 링크 없음")
-    check(".playground-shell" in style, "[놀이터] style.css 스코프 없음")
+    for page in ["playground.html", "write.html", "post.html"]:
+        shell = (ROOT / page).read_text(encoding="utf-8")
+        check(shell == playground and '<h1 class="pgw-title">준비 중</h1>' in shell, f"{page} 안내 누락")
+        check('<script' not in shell and '<form' not in shell and 'href="/"' in shell, f"{page} 안내 진입점 오류")
+    check("playground.html" not in nav and "write.html" not in nav, "게시판 메뉴 노출")
     assert not failures
 
 
-def test_reviews_event_review_list_exists_and_form_mounts_in_playground():
+def test_reviews_event_review_list_is_read_only():
     reviews = (ROOT / "reviews.html").read_text(encoding="utf-8")
     reviews_community = (ROOT / "reviews-community.js").read_text(encoding="utf-8")
-    check("data-event-review-list" in reviews, "[후기] 모임 후기 목록 영역 없음")
+    event_codes = re.findall(r'data-event-review-list data-event-code="([^"]+)"', reviews)
+    check(len(event_codes) == len(set(event_codes)) == 11, "[후기] 행사 목록 누락 또는 중복")
+    check('aria-labelledby="mobile-event-reviews-heading"' in reviews and
+          'id="mobile-event-reviews-heading"' in reviews, "[후기] 모바일 행사별 후기 영역 없음")
     check("reviews-community.js" in reviews, "[후기] reviews-community.js 로드 없음")
-    check("KalisEventReviewForm" in reviews_community, "[후기] 모임 후기 작성 폼 연결 없음")
+    check("mountReviewForm" not in reviews_community and "data-event-review-app" not in reviews, "[후기] 작성 폼 노출")
     assert not failures
 
 
@@ -61,26 +61,13 @@ def test_admin_page_static_shell_exists():
 
 def test_community_route_and_seo_files():
     reviews_community = (ROOT / "reviews-community.js").read_text(encoding="utf-8")
-    playground = (ROOT / "playground.html").read_text(encoding="utf-8")
     playground_list = (ROOT / "playground-list.js").read_text(encoding="utf-8")
     playground_detail = (ROOT / "playground-detail.js").read_text(encoding="utf-8")
-    write = (ROOT / "write.html").read_text(encoding="utf-8")
     build_public = (ROOT / "scripts" / "build-public.mjs").read_text(encoding="utf-8")
 
-    check("/p/" in reviews_community,
-          "[후기] reviews-community.js 상세 기록 링크가 /p/가 아님")
-    check("playground.html?post=" not in reviews_community,
-          "[후기] reviews-community.js에 이전 playground.html?post= 링크가 남아 있음")
-    check("const POST_SHARE_PATH = '/p/'" in playground_detail,
-          "[공유] playground-detail.js에 OG 상세 공유 URL 패턴이 없음")
-    check("MAGIC CULTURE ARCHIVE" in playground,
-          "[기록소] playground.html 영문 눈썹 문구가 갱신되지 않음")
-    check('href="intro.html">5,000원 입문 강의 보기 →</a>' in playground,
-          "[기록소] 입문 강의 카드 문구 또는 intro.html 링크 없음")
-    check("이 기록소의 지도" in playground_list,
-          "[기록소] playground-list.js 빈 상태 문구가 갱신되지 않음")
-    check("nickname-onboarding.js" in write,
-          "[글쓰기] write.html이 nickname-onboarding.js를 로드하지 않음")
+    check("/p/" not in reviews_community, "후기에 닫힌 상세 링크 노출")
+    check("이 기록소의 지도" in playground_list, "보관 목록 모듈 누락")
+    check("const POST_SHARE_PATH = '/p/'" in playground_detail, "보관 상세 모듈 누락")
 
     for page in ["admin.html", "write.html", "mypage.html"]:
         raw = (ROOT / page).read_text(encoding="utf-8")
@@ -90,8 +77,8 @@ def test_community_route_and_seo_files():
     robots = ROOT / "robots.txt"
     check(sitemap.is_file(), "[SEO] sitemap.xml 없음")
     if sitemap.is_file():
-        check("playground.html" in sitemap.read_text(encoding="utf-8"),
-              "[SEO] sitemap.xml에 playground.html 없음")
+        check("playground.html" not in sitemap.read_text(encoding="utf-8"),
+              "[SEO] sitemap.xml에 게시판이 남아 있음")
     check(robots.is_file(), "[SEO] robots.txt 없음")
     check("sitemap.xml" in build_public and "robots.txt" in build_public,
           "[빌드] sitemap.xml 또는 robots.txt가 PUBLIC_FILES에 없음")
@@ -397,13 +384,7 @@ def main():
     # 공유 랜딩 내비는 데스크톱/모바일 변형 바깥에 한 번만 마운트되어야 한다.
     nav = (ROOT / "nav.js").read_text(encoding="utf-8")
     landing_nav = nav.split("const LANDING_PAGES = [", 1)[1].split("];", 1)[0]
-    community_nav = nav.split("const COMMUNITY_PAGES = [", 1)[1].split("];", 1)[0]
-    # lesson 개편(2026-07): nav를 두 그룹으로 분리 — 레슨 CTA는 LANDING_PAGES,
-    # 마술문화 기록소(playground)는 COMMUNITY_PAGES로 이동. 옛 "기록소가 LANDING_PAGES에" 규칙은 폐기됨.
-    check("lesson.html" in landing_nav,
-          "[내비] LANDING_PAGES에 레슨 CTA(lesson.html) 링크 없음")
-    check("playground.html" in community_nav,
-          "[내비] COMMUNITY_PAGES에 기록소(playground.html) 링크 없음")
+    check("lesson.html" in landing_nav and "playground.html" not in nav, "내비 링크 오류")
     for f in LANDING_PAGES:
         raw = (ROOT / f).read_text(encoding="utf-8")
         nav_root = raw.find('id="nav-root"')

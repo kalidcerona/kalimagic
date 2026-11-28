@@ -14,7 +14,7 @@ function assertInOrder(source, snippets, message) {
   assert.deepEqual(indexes, indexes.slice().sort((a, b) => a - b), message);
 }
 
-test('playground front modules exist and html loads them in dependency order', () => {
+test('archived playground modules exist and the paused shell loads no scripts', () => {
   const files = [
     'playground-api.js',
     'playground-list.js',
@@ -27,21 +27,7 @@ test('playground front modules exist and html loads them in dependency order', (
   }
 
   const html = read('playground.html');
-  const order = [
-    'auth.js',
-    'playground-api.js',
-    'playground-list.js',
-    'playground-compose.js',
-    'playground-detail.js',
-    'playground.js'
-  ].map((script) => html.indexOf(`src="${script}"`));
-
-  assert.deepEqual(
-    order,
-    order.slice().sort((a, b) => a - b),
-    'script order should be auth, api, list, compose, detail, bootstrap'
-  );
-  assert.equal(order.every((index) => index > -1), true);
+  assert.doesNotMatch(html, /<script/);
 });
 
 test('playground api module wraps the v2 endpoints with auth headers', () => {
@@ -85,18 +71,8 @@ test('playground list module has seven tabs, table rendering, paging, and free b
   assert.match(source, /배운 마술 루틴과 기술을 보관할 첫 기록을 기다리고 있습니다\./);
 });
 
-test('playground html fallback tabs put 전체 기록 first', () => {
-  const html = read('playground.html');
-
-  assertInOrder(html, [
-    '<button type="button" data-category="all" class="is-active">전체 기록</button>',
-    '<button type="button" data-category="free">자유게시판</button>',
-    '<button type="button" data-category="routine">마술 보관소</button>',
-    '<button type="button" data-category="question">질문함</button>',
-    '<button type="button" data-category="review">도구 기록</button>',
-    '<button type="button" data-category="event_review">모임 기록</button>',
-    '<button type="button" data-category="magazine">보관된 기록</button>'
-  ], 'static fallback tabs should follow the requested board order');
+test('paused list has no fallback tabs', () => {
+  assert.doesNotMatch(read('playground.html'), /data-category|data-write-link/);
 });
 
 test('playground list module catches list load failures and renders a friendly error', () => {

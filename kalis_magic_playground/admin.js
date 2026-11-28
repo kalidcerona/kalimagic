@@ -1,6 +1,6 @@
 (function () {
   var state = {
-    filter: 'all',
+    filter: 'members',
     flash: '',
     memberQuery: ''
   };
@@ -500,10 +500,6 @@
     var card = el('article', 'admin-card');
     var protectedRolePattern = /^(admin|kali)$/;
     var nameEl = el('h2', '', member.nickname || '닉네임 없음');
-    if (member.userId) {
-      nameEl.setAttribute('data-author-id', member.userId);
-      nameEl.setAttribute('data-author-nickname', member.nickname || '닉네임 없음');
-    }
     card.appendChild(nameEl);
     card.appendChild(memberRoleNode(member));
     card.appendChild(el('span', '', member.createdAt ? new Date(member.createdAt).toLocaleDateString('ko-KR') : '가입일 없음'));
@@ -756,16 +752,16 @@
     if (state.filter === 'members') return loadMembers();
     if (state.filter === 'mmbs_requests') return loadMmbsRequests();
     if (state.filter === 'analytics') return loadAnalytics();
-    if (state.filter === 'reports') return loadReports();
-    return loadInbox();
   }
 
   function bindFilters() {
     filterButtons.forEach(function (button) {
       button.addEventListener('click', function () {
-        state.filter = button.dataset.adminFilter || 'all';
+        if (!['members', 'mmbs_requests', 'analytics'].includes(button.dataset.adminFilter)) return;
+        state.filter = button.dataset.adminFilter;
         filterButtons.forEach(function (tab) {
           tab.classList.toggle('is-active', tab === button);
+          tab.setAttribute('aria-pressed', String(tab === button));
         });
         loadCurrentView();
       });
@@ -775,14 +771,11 @@
   async function init() {
     if (!window.AdminSession || !await window.AdminSession.ready) {
       filterButtons.forEach(function (button) { button.disabled = true; });
-      listEl.textContent = '로그인 후 커뮤니티 관리 항목을 확인할 수 있습니다.';
+      listEl.textContent = '로그인 후 회원·강의 신청·측정 항목을 확인할 수 있습니다.';
       return;
     }
     bindFilters();
-    if (window.KalisBadges && typeof window.KalisBadges.bindAuthorCells === 'function') {
-      window.KalisBadges.bindAuthorCells(listEl);
-    }
-    await loadInbox();
+    await loadMembers();
   }
 
   init();

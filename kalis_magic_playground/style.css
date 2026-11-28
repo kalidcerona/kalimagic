@@ -152,6 +152,7 @@ a:focus-visible,button:focus-visible,summary:focus-visible,[tabindex]:focus-visi
 .nav-link:hover { color: var(--text-main); }
 .nav-link.active { color: var(--text-main); }
 .nav-profile { display: inline-flex; align-items: center; gap: 4px; min-width: 0; max-width: 10rem; }
+.main-nav[data-space="archive"] .nav-profile { max-width: none; }
 .nav-profile__nickname { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .nav-profile .kali-badge-img {
     flex: 0 0 auto; width: 1em; height: 1em; margin: 0; border-radius: 50%; object-fit: cover;
@@ -588,6 +589,8 @@ a:focus-visible,button:focus-visible,summary:focus-visible,[tabindex]:focus-visi
         scrollbar-width: none;
         column-gap: 2px;
     }
+    .main-nav[data-space="archive"] .nav-links { justify-content: safe flex-end; }
+    .main-nav[data-space="archive"] .nav-link { flex: 0 0 auto; max-width: none; }
     .nav-links::-webkit-scrollbar { display: none; }
 }
 @media (max-width: 600px) {
@@ -1266,6 +1269,8 @@ body.field-modal-open { overflow: hidden; }
 }
 
 .mypage-profile__title {
+  min-width: 0;
+  overflow-wrap: anywhere;
   display: flex;
   align-items: center;
   gap: 0.4em;
@@ -1348,6 +1353,14 @@ body.field-modal-open { overflow: hidden; }
   padding: 120px 0 80px;
 }
 
+.admin-operations .playground-button:not(.playground-button--ghost),
+.admin-operations .playground-button:hover,
+.admin-operations .playground-tabs button:hover,
+.admin-operations .playground-tabs button.is-active {
+  background: var(--kx-terra-deep);
+  color: var(--text-main);
+}
+
 .admin-list {
   display: grid;
   gap: 12px;
@@ -1361,6 +1374,11 @@ body.field-modal-open { overflow: hidden; }
   gap: 8px;
   padding: 18px;
 }
+[data-admin-list] .admin-card {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
 .admin-card[hidden] { display: none; }
 
 .admin-card h2 {
@@ -1953,6 +1971,28 @@ button.mypage-badge-tile:hover,
   box-shadow: 0 0 0 2px rgba(var(--point-gold-rgb), 0.18);
 }
 
+.mobile-event-reviews {
+  padding: 34px 24px 0;
+}
+
+.mobile-event-reviews h2 {
+  margin-bottom: 12px;
+  font-size: 1.1rem;
+}
+
+.mobile-event-reviews details {
+  border-bottom: 1px solid var(--border-light);
+}
+
+.mobile-event-reviews summary {
+  padding: 12px 0;
+  cursor: pointer;
+}
+
+.mobile-event-reviews .event-review-list {
+  margin: 0 0 16px;
+}
+
 .event-review-list {
   display: grid;
   gap: 10px;
@@ -1966,7 +2006,7 @@ button.mypage-badge-tile:hover,
   padding-top: 12px;
 }
 
-.event-review-card a {
+.event-review-card strong {
   color: var(--text-main);
   font-weight: 800;
 }
@@ -1977,6 +2017,16 @@ button.mypage-badge-tile:hover,
   line-height: 1.65;
   max-height: 5em;
   overflow: hidden;
+}
+
+.event-review-list .event-review-card {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.event-review-list .event-review-card p {
+  max-height: none;
+  overflow: visible;
 }
 
 .event-review-card span {

@@ -1,3 +1,4 @@
+import { communityPaused, pausedWrite } from './_lib/community-pause.mjs';
 import { canReadAuthor, canReadPostBody } from './_lib/access-policy.mjs';
 import { requireViewer } from './_lib/auth.mjs';
 import {
@@ -188,6 +189,7 @@ async function listPosts(event) {
 }
 
 async function postsHandler(event) {
+  if (communityPaused && (event.httpMethod === 'POST' || event.httpMethod === 'DELETE')) return pausedWrite();
   if (event.httpMethod === 'POST') return createPost(event);
   if (event.httpMethod === 'DELETE') return deletePost(event);
   if (event.httpMethod !== 'GET') return json(405, { error: 'method_not_allowed' });

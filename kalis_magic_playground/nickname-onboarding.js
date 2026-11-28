@@ -36,7 +36,7 @@
 
     var title = el('span', 'field-modal-tag', '닉네임 설정');
     title.id = 'nickname-onboarding-title';
-    var guide = el('p', 'field-modal-quote', '커뮤니티에서 쓸 닉네임을 정해 주십시오');
+    var guide = el('p', 'field-modal-quote', '사이트에서 사용할 닉네임을 정해 주십시오');
     var form = el('form', 'playground-comment-form');
     var input = document.createElement('input');
     input.name = 'nickname';

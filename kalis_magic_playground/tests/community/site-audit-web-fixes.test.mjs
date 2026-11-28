@@ -112,14 +112,14 @@ function detailApi(viewer, visibility, { postType = 'question', status = 'visibl
   const db = { from(table) {
     calls.push(table);
     const query = {
-      select() { return this; }, eq() { return this; }, order() { return this; }, update() { return this; },
+      select() { return this; }, eq() { return this; }, order() { return this; }, update() { throw new Error("unexpected archive write"); },
       maybeSingle: async () => ({ data: row, error: null }),
       then(resolve, reject) { return Promise.resolve({ data: [], error: null }).then(resolve, reject); }
     };
     return query;
   } };
   const context = {
-    ...policy, json, validateUuid, requireViewer: async () => viewer,
+    communityPaused: true, ...policy, json, validateUuid, requireViewer: async () => viewer,
     getSupabaseAdmin: () => db, fetchBadgeMap: async () => ({}), resolvePostAuthorBadges: () => []
   };
   // Evaluate the production handler with infrastructure imports replaced by local fakes.

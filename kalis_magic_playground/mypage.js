@@ -155,30 +155,32 @@
 
   function showLogin() {
     clear(profileEl);
-    profileEl.hidden = true;
-    if (inviteEl) clear(inviteEl);
-    if (mmbsEl) clear(mmbsEl);
-    clear(badgeEl);
-    if (questBadgeEl) clear(questBadgeEl);
-    clear(tabsEl);
-    clear(listEl);
     var box = el('article', 'playground-empty');
     box.appendChild(el('h2', '', '로그인이 필요합니다'));
-    box.appendChild(el('p', '', '내 활동을 보려면 Google 로그인이 필요합니다.'));
+    box.appendChild(el('p', '', '마이페이지를 이용하려면 Google 로그인이 필요합니다.'));
     var button = el('button', 'playground-button', '구글로 계속하기');
     button.type = 'button';
-    button.addEventListener('click', function () {
-      window.MagicAuth.login();
+    var status = el('p', 'playground-form-status is-error');
+    status.setAttribute('role', 'status');
+    button.addEventListener('click', async function () {
+      status.textContent = '';
+      try {
+        await window.MagicAuth.login();
+      } catch (error) {
+        status.textContent = '로그인을 시작하지 못했습니다. 다시 시도해 주십시오.';
+      }
     });
     box.insertAdjacentHTML('beforeend', window.MagicAuth.noticeHtml);
     box.appendChild(button);
-    listEl.appendChild(box);
+    box.appendChild(status);
+    profileEl.appendChild(box);
   }
 
   function profileForm() {
     var form = el('form', 'playground-comment-form');
     var input = document.createElement('input');
     input.name = 'nickname';
+    input.setAttribute('aria-label', '새 닉네임');
     input.type = 'text';
     input.minLength = 2;
     input.maxLength = 24;
@@ -197,7 +199,14 @@
     form.appendChild(actions);
     form.appendChild(status);
 
-    cancel.addEventListener('click', renderProfile);
+    function finishEditing() {
+      renderProfile();
+      profileEl.querySelector('button').focus();
+    }
+    cancel.addEventListener('click', finishEditing);
+    form.addEventListener('keydown', function (event) {
+      if (event.key === 'Escape' && !save.disabled) finishEditing();
+    });
     form.addEventListener('submit', async function (event) {
       event.preventDefault();
       status.classList.remove('is-error');
@@ -209,7 +218,7 @@
           body: JSON.stringify({ nickname: input.value })
         });
         state.profile = Object.assign({}, state.profile || {}, data);
-        renderProfile();
+        finishEditing();
       } catch (error) {
         status.textContent = error.code === 'nickname_taken' ? '이미 사용 중인 닉네임입니다' : '닉네임을 저장하지 못했습니다';
         status.classList.add('is-error');
@@ -220,14 +229,21 @@
     return form;
   }
 
-  function renderProfile() {
-    clear(profileEl);
-    var title = el('h2', 'playground-post__title', state.profile && state.profile.nickname ? state.profile.nickname : '닉네임 없음');
-    title.classList.add('mypage-profile__title');
+  function renderProfileBadge(title) {
+    if (!title) return;
+    var previous = title.querySelector('.kali-badge-img');
+    if (previous) previous.remove();
     var preferredBadgeCode = state.badgeData && state.badgeData.preferredBadgeCode;
     if (preferredBadgeCode && window.KalisBadges && window.KalisBadges.imageBadgesHtml) {
       title.insertAdjacentHTML('beforeend', window.KalisBadges.imageBadgesHtml([preferredBadgeCode]));
     }
+  }
+
+  function renderProfile() {
+    clear(profileEl);
+    var title = el('h2', 'playground-post__title', state.profile && state.profile.nickname ? state.profile.nickname : '닉네임 없음');
+    title.classList.add('mypage-profile__title');
+    renderProfileBadge(title);
     var meta = el('p', 'playground-post__body', '역할 ' + ((state.profile && state.profile.role) || 'member'));
     var actions = el('div', 'admin-card__actions');
     var change = el('button', 'playground-button playground-button--ghost', '닉네임 변경');
@@ -236,6 +252,7 @@
       clear(profileEl);
       profileEl.appendChild(el('h2', 'playground-post__title', '닉네임 변경'));
       profileEl.appendChild(profileForm());
+      profileEl.querySelector('input').focus();
     });
     actions.appendChild(change);
     profileEl.appendChild(title);
@@ -374,7 +391,6 @@
   function badgeMetaText(badge) {
     var wrap = el('span', 'mypage-badge-tile__text');
     wrap.appendChild(el('strong', '', badge.label || badge.code));
-    if (badge.description) wrap.appendChild(el('span', '', badge.description));
     return wrap;
   }
 
@@ -392,10 +408,8 @@
         method: 'PATCH',
         body: JSON.stringify({ preferredBadgeCode: code })
       });
-      var newSponsorBadges = newlyOwnedBadges(SPONSOR_BADGE_SEEN_STORAGE_KEY, state.badgeData.catalog || []);
-      if (state.profile) renderProfile();
+      renderProfileBadge(profileEl.querySelector('.mypage-profile__title'));
       renderBadges();
-      queueSponsorBadgeCelebrations(newSponsorBadges);
     } catch (error) {
       if (status) {
         status.textContent = error.message || '배지를 저장하지 못했습니다.';
@@ -465,10 +479,8 @@
     renderBadges();
     try {
       state.badgeData = await fetchJson('/.netlify/functions/member-badges');
-      var newSponsorBadges = newlyOwnedBadges(SPONSOR_BADGE_SEEN_STORAGE_KEY, state.badgeData.catalog || []);
-      if (state.profile) renderProfile();
+      renderProfileBadge(profileEl.querySelector('.mypage-profile__title'));
       renderBadges();
-      queueSponsorBadgeCelebrations(newSponsorBadges);
     } catch (error) {
       clear(badgeEl);
       badgeEl.appendChild(el('h2', 'mypage-section-title', '배지'));
@@ -802,8 +814,13 @@
   }
 
   async function init() {
-    if (!profileEl || !tabsEl || !listEl || !window.MagicAuth) return;
-    state.session = await window.MagicAuth.getSession();
+    if (!profileEl) return;
+    try {
+      state.session = await window.MagicAuth.getSession();
+    } catch (error) {
+      profileEl.textContent = '로그인 상태를 확인하지 못했습니다. 페이지를 새로고침해 주십시오.';
+      return;
+    }
     if (!state.session) {
       showLogin();
       return;
@@ -815,14 +832,11 @@
       renderProfile();
     } catch (error) {
       clear(profileEl);
-      profileEl.hidden = true;
+      profileEl.textContent = '프로필을 불러오지 못했습니다.';
     }
     await loadInvite();
     await loadMmbsRequest();
     await loadBadges();
-    await loadQuestBadges();
-    renderTabs();
-    await loadActivity();
   }
 
   window.addEventListener('profile:nickname-updated', function (event) {

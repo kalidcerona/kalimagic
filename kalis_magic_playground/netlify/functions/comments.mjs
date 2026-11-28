@@ -1,3 +1,4 @@
+import { communityPaused, pausedWrite } from './_lib/community-pause.mjs';
 import { canReadPostBody } from './_lib/access-policy.mjs';
 import { requireViewer } from './_lib/auth.mjs';
 import { fetchBadgeMap } from './_lib/badges.mjs';
@@ -42,6 +43,7 @@ async function readablePost(supabase, postId, viewer) {
 }
 
 async function commentsHandler(event) {
+  if (communityPaused && event.httpMethod === 'POST') return pausedWrite();
   if (event.httpMethod === 'GET') return listComments(event);
   if (event.httpMethod === 'POST') return createComment(event);
   return json(405, { error: 'method_not_allowed' });

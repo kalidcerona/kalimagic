@@ -1,3 +1,4 @@
+import { communityPaused, pausedWrite } from './_lib/community-pause.mjs';
 import { requireViewer } from './_lib/auth.mjs';
 import { canReadAnswer } from './_lib/access-policy.mjs';
 import { json, readJsonBody } from './_lib/http.mjs';
@@ -138,6 +139,7 @@ export async function changeAnswerHelpful(event, viewer, supabase, hooks = {}) {
 }
 
 export async function handler(event) {
+  if (communityPaused && (event.httpMethod === 'POST' || event.httpMethod === 'DELETE')) return pausedWrite();
   if (event.httpMethod !== 'POST' && event.httpMethod !== 'DELETE') {
     return json(405, { error: 'method_not_allowed' });
   }

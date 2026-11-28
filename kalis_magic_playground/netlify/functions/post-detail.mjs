@@ -1,3 +1,4 @@
+import { communityPaused } from './_lib/community-pause.mjs';
 import { canAnswerQuestion, canReadAnswer, canReadAuthor, canReadPostBody } from './_lib/access-policy.mjs';
 import { requireViewer } from './_lib/auth.mjs';
 import { fetchBadgeMap, resolvePostAuthorBadges } from './_lib/badges.mjs';
@@ -152,7 +153,7 @@ export async function handler(event) {
   const canReadName = canReadAuthor({ visibility: row.visibility, authorUserId: row.author_user_id }, viewer);
   const postAuthorId = canReadName && row.display_mode === 'nickname' ? row.author_user_id : null;
 
-  if (shouldIncrementView(row, viewer)) {
+  if (!communityPaused && shouldIncrementView(row, viewer)) {
     try {
       state.viewCount = await incrementViewCount(supabase, row);
     } catch {

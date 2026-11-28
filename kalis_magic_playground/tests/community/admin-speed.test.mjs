@@ -242,7 +242,7 @@ test('reopening an admin tab paints the cached list before the background fetch 
   const rootEl = new El('div');
   const list = new El('section');
   list.setAttribute('data-admin-list', '');
-  for (const name of ['all', 'waiting', 'members']) {
+  for (const name of ['members', 'mmbs_requests', 'analytics']) {
     const button = new El('button');
     button.setAttribute('data-admin-filter', name);
     rootEl.appendChild(button);
@@ -270,48 +270,37 @@ test('reopening an admin tab paints the cached list before the background fetch 
   await flush();
   assert.equal(calls.length, 1);
   assert.equal(calls[0].loading, true);
-  const first = { id: 'post-1', title: '첫 질문', category: '질문', visibility: 'public', status: 'visible', postType: 'note' };
-  calls[0].resolve({ items: [first] });
+  const first = { userId: 'user-1', nickname: '민수', role: 'member' };
+  calls[0].resolve({ members: [first] });
   await flush();
-  const card = list.querySelector('article');
-  assert.match(card.textContent, /첫 질문/);
-
-  const waiting = rootEl.querySelectorAll('button').find((button) => button.dataset.adminFilter === 'waiting');
-  const reopenAll = rootEl.querySelectorAll('button').find((button) => button.dataset.adminFilter === 'all');
-  click(waiting);
+  assert.match(list.textContent, /민수/);
+  const filters = rootEl.querySelectorAll('[data-admin-filter]');
+  click(filters[1]);
   await flush();
-  calls.at(-1).resolve({ items: [{ id: 'post-2', title: '대기 질문', category: '질문', visibility: 'public', status: 'visible', postType: 'note' }] });
+  calls.at(-1).resolve({ requests: [] });
   await flush();
-  assert.match(list.textContent, /대기 질문/);
-
-  click(reopenAll);
+  assert.match(list.textContent, /대기 중인 신청이 없습니다/);
+  click(filters[0]);
   await flush();
   const background = calls.at(-1);
-  assert.equal(background.method, 'GET');
   assert.equal(background.loading, false);
-  assert.match(background.painted, /첫 질문/);
+  assert.match(background.painted, /민수/);
   const restored = list.querySelector('article');
-  assert.match(restored.textContent, /첫 질문/);
-  background.resolve({ items: [first] });
+  background.resolve({ members: [first] });
   await flush();
-  assert.equal(list.querySelector('article'), restored, 'unchanged data must not rebuild the list');
-  click(waiting);
+  assert.equal(list.querySelector('article'), restored);
+  click(filters[0]);
   await flush();
-  calls.at(-1).resolve({ items: [{ id: 'post-2', title: '대기 질문', category: '질문', visibility: 'public', status: 'visible' }] });
+  calls.at(-1).resolve({ members: [{ ...first, nickname: '변경' }] });
   await flush();
-  click(reopenAll);
-  await flush();
-  const next = calls.at(-1);
-  next.resolve({ items: [{ id: 'post-3', title: '바뀐 질문', category: '질문', visibility: 'public', status: 'visible' }] });
-  await flush();
-  assert.match(list.textContent, /바뀐 질문/);
+  assert.match(list.textContent, /변경/);
 });
 
 test('a member role POST replaces that row and does not refetch the list', async () => {
   const rootEl = new El('div');
   const list = new El('section');
   list.setAttribute('data-admin-list', '');
-  for (const name of ['all', 'members']) {
+  for (const name of ['members', 'mmbs_requests', 'analytics']) {
     const button = new El('button');
     button.setAttribute('data-admin-filter', name);
     rootEl.appendChild(button);
@@ -335,11 +324,6 @@ test('a member role POST replaces that row and does not refetch the list', async
       calls[calls.length - 1].reject = reject;
     });
     vm.runInContext(read('admin.js'), context);
-    await flush();
-    calls[0].resolve({ items: [] });
-    await flush();
-    const members = rootEl.querySelectorAll('button').find((button) => button.dataset.adminFilter === 'members');
-    click(members);
     await flush();
     calls.at(-1).resolve({ members: [{ userId: 'user-1', nickname: '민수', role: 'member', createdAt: '2026-01-01T00:00:00.000Z' }] });
     await flush();

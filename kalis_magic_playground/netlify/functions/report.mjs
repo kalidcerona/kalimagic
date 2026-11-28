@@ -1,9 +1,11 @@
+import { communityPaused, pausedWrite } from './_lib/community-pause.mjs';
 import { requireViewer } from './_lib/auth.mjs';
 import { json, readJsonBody, requireMethod } from './_lib/http.mjs';
 import { getSupabaseAdmin } from './_lib/supabase.mjs';
 import { validateReportPayload } from './_lib/validators.mjs';
 
 export async function handler(event) {
+  if (communityPaused && event.httpMethod === 'POST') return pausedWrite();
   try {
     requireMethod(event, ['POST']);
   } catch {
