@@ -297,7 +297,7 @@ header { text-align:center; }
 .cups-notice > summary {
   min-height:48px;
   padding-block:10px;
-  color:var(--link);
+  color:var(--link,var(--blue));
   font-weight:700;
   cursor:pointer;
 }
@@ -315,15 +315,20 @@ header { text-align:center; }
 .cups-signup #receipt {
   display:grid;
   grid-template-columns:max-content minmax(0,1fr);
-  border-top:1px solid var(--rule);
 }
-.cups-signup #receipt > * {
+.cups-signup #receipt > div {
+  display:grid;
+  grid-column:1 / -1;
+  grid-template-columns:inherit;
+  align-items:baseline;
+}
+.cups-signup #receipt dt {
   margin:0;
-  padding-block:.65rem;
-  border-bottom:1px solid var(--rule);
 }
-.cups-signup #receipt dd {
-  padding-inline-start:.75rem;
+.cups-signup .form-summary .retention-note {
+  margin-block-end:4px;
+  font-size:.875rem;
+  word-break:keep-all;
 }
 .cups-signup :is(#availability, #photo-prompt, #errors, #copy-status) {
   white-space:pre-line;
@@ -338,6 +343,16 @@ header { text-align:center; }
 .entry-card .entry-secondary { display:block; margin-block:.5rem; background:transparent; color:inherit; border:0; text-decoration:underline; }
 .entry-card [hidden] { display:none; }
 .entry-card [role="status"]:empty { margin:0; }
+#entry-switch {
+  min-height:44px;
+  padding:0 8px;
+  border:0;
+  background:transparent;
+  color:var(--muted);
+  font-size:.875rem;
+  font-weight:400;
+  text-decoration:underline;
+}
 #handoff-url { width:100%; }
 
 .entry-card .option { position:relative; align-items:center; }

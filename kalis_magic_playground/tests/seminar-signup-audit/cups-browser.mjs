@@ -170,6 +170,8 @@ try {
               lineTop = undefined;
               return;
             }
+            // The retention note may wrap between its two phrases on narrow screens.
+            if (node.matches('.retention-note > .phrase')) lineTop = undefined;
             node.childNodes.forEach(visit);
             return;
           }

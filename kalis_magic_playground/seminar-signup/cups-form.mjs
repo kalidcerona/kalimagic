@@ -473,11 +473,13 @@ function showReceipt(receipt, restored = false) {
     ? ['접수 당시 안내야.', ...(pastDue && (paid || test) ? [expiredNotice] : [])].join('\n') : '';
   $('receipt').replaceChildren();
   for (const [label,value,ruled] of rows) {
+    const row = document.createElement('div');
     const dt = document.createElement('dt'), dd = document.createElement('dd');
     dt.textContent = label;
     dd.textContent = value;
-    if (ruled) { dt.className = 'ruled'; dd.className = 'ruled'; }
-    $('receipt').append(dt,dd);
+    if (ruled) row.className = 'ruled';
+    row.append(dt,dd);
+    $('receipt').append(row);
   }
   const copyRows = [['접수번호',number], rows[0], [amountLabel,amount], ...rows.slice(1)];
   copyText = [

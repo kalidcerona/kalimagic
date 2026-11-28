@@ -67,12 +67,7 @@
       <form id="signup" action="/api/seminars/signup" method="post" novalidate aria-label="컵앤볼 신청서" hidden>
         <div class="form-main">
           <section class="card entry-card" id="entry-mode" hidden>
-            <h2 id="entry-mode-title"></h2>
-            <div id="entry-linkage" hidden>
-              <p id="linkage-notice"></p>
-              <div class="option"><input type="checkbox" id="linkage-consent" aria-describedby="linkage-notice"><label for="linkage-consent">[선택] 사이트 회원 식별자를 신청 내역과 함께 보관하는 데 동의합니다.</label></div>
-              <button type="button" id="entry-switch" class="entry-secondary">비회원으로 계속하기</button>
-            </div>
+            <h2 id="entry-mode-title">비회원 신청</h2>
           </section>
           <section id="age-section" class="card question">
             <h2>신청 가능 연령을 <span class="phrase">확인하십시오.</span></h2>
@@ -216,6 +211,14 @@
                 <label for="consent">개인정보 수집·이용에 동의합니다</label>
               </div>
             </div>
+            <div id="entry-linkage" class="option-group consent-pair" hidden>
+              <details class="cups-notice">
+                <summary>회원 식별자 보관 안내 보기</summary>
+                <p id="linkage-notice"></p>
+              </details>
+              <div class="option"><input type="checkbox" id="linkage-consent" aria-describedby="linkage-notice"><label for="linkage-consent">[선택] 사이트 회원 식별자를 신청 내역과 함께 보관하는 데 동의합니다.</label></div>
+              <button type="button" id="entry-switch" class="entry-secondary">비회원으로 계속하기</button>
+            </div>
           </section>
         </div>
         <div class="form-summary">
@@ -251,6 +254,7 @@
               <strong id="total" class="money"> 확인 중 </strong>
             </div>
             <p id="test-offer-warning" hidden>테스트 접수야. 입금하지 말아줘.</p>
+            <p class="hint retention-note">신청 내역은 행사 종료 후 <span class="phrase">30일 이내에 삭제됩니다.</span></p>
             <button id="submit" type="submit" aria-busy="false" disabled> 접수 준비 중 </button>
             <p id="submit-status" class="sr-only" role="status"></p>
           </section>

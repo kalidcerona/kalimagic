@@ -73,9 +73,9 @@ export function createEntry(eventId, isLocked) {
     account = session?.user.id;
     $('entry-member').disabled = false;
     $('entry-choice').hidden = true;
-    $('entry-mode').hidden = false;
-    $('entry-mode-title').textContent = mode === 'member' ? '회원 신청' : '비회원 신청';
+    $('entry-mode').hidden = mode !== 'guest';
     $('entry-linkage').hidden = mode !== 'member';
+    $('entry-linkage').querySelector('details').open = false;
     $('linkage-consent').checked = false;
     $('signup').hidden = false;
     document.querySelector('.skip').hash = 'signup';
@@ -246,13 +246,13 @@ export function createEntry(eventId, isLocked) {
         cleanCallback(); returning = false; clearMarker();
         $('entry-choice').hidden = true;
         if (draft && !mode) choose('guest', null, false);
-        if (mode !== 'member') $('entry-mode').hidden = true;
+        $('entry-mode').hidden = true;
         $('signup').hidden = false;
         generation++;
         $('entry-member').disabled = false;
         return;
       }
-      if (mode) { $('entry-mode').hidden = false; return; }
+      if (mode) { $('entry-mode').hidden = mode !== 'guest'; return; }
       if (guestOnBack && !returning) { choose('guest', null, false); return; }
       $('signup').hidden = true;
       $('entry-choice').hidden = false;

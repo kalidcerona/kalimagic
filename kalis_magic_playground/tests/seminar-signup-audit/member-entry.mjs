@@ -36,7 +36,7 @@ try {
         const total = body.quote.total;
         return route.fulfill({json:{receipt:{eventId:config.id,id:'00000000-0000-4000-8000-000000000001',status:'pending',
           createdAt:new Date(now).toISOString(), paymentDueAt:new Date(Date.parse(now)+86400000).toISOString(),
-          items:[{label:'테스트 참가권',price:total}],total,payerName:body.name,payment:{bank:'테스트 은행',holder:'테스트 운영자'},test:true}}});
+          items:[{label:cups ? '컵앤볼 기본 참가권 및 현장 실습 프로그램' : '테스트 참가권',price:total}],total,payerName:body.name,payment:{bank:'테스트 은행',holder:'테스트 운영자'},test:true}}});
       });
       await page.addInitScript(() => {
         window.fixture = {id:'synthetic-account', token:'synthetic-token', reads:0, logins:0, agreement:true};
@@ -48,7 +48,7 @@ try {
       });
       const shot = async (state,id) => {
         await page.locator(id).evaluate(el => el.scrollIntoView({block:'start',behavior:'instant'}));
-        if (output) await page.screenshot({fullPage:state === 'member',path:path.join(output,config.id+'-'+state+'-'+width+'.png')});
+        if (output) await page.screenshot({path:path.join(output,config.id+'-'+state+'-'+width+'.png')});
         assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth),false);
       };
       const fill = async () => {
@@ -56,6 +56,12 @@ try {
         await page.fill('#birth-date','2000-01-01');
         await page.fill('#contact','01000000001');
         for (const id of ['age-confirmed','gender-female','discovery-instagram','reason-reviews',...(!cups ? ['open-no'] : []),'photo-consent','consent']) await page.check('#'+id);
+      };
+      const checkRetention = async () => {
+        const note = page.locator('.retention-note');
+        assert.equal(await note.isVisible(),true);
+        assert.equal(await note.textContent(),'신청 내역은 행사 종료 후 30일 이내에 삭제됩니다.');
+        assert.equal(await note.evaluate(el => el.nextElementSibling.id),'submit');
       };
       await page.goto(url.href);
       await page.waitForSelector('#entry-choice');
@@ -68,7 +74,13 @@ try {
       await page.waitForSelector('#entry-choice');
       await page.click('#entry-guest');
       assert.equal(await page.evaluate(() => document.activeElement.id),'name');
+      assert.equal(await page.textContent('#entry-mode-title'),'비회원 신청');
+      assert.equal(await page.isVisible('#entry-linkage'),false);
       await shot('guest','#entry-mode');
+      if (cups) {
+        await checkRetention();
+        await shot('guest-submit','.form-summary');
+      }
       await fill();
       await page.click('#submit');
       await page.waitForSelector('#success');
@@ -84,10 +96,31 @@ try {
       assert.equal(await page.inputValue('#name'),'');
       assert.equal(await page.inputValue('#contact'),'01000000001');
       assert.equal(await page.isChecked('#linkage-consent'),false);
-      await shot('member','#entry-mode');
+      assert.equal(await page.isVisible('#entry-mode'),false);
+      const linkageNotice = page.locator('#entry-linkage details');
+      assert.equal(await linkageNotice.evaluate(el => el.open),false);
+      assert.equal(await page.textContent('#linkage-notice'),offer.linkageNotice);
+      assert.equal(await page.locator('#entry-linkage').evaluate(el => el.closest('.card').contains(document.querySelector('#consent'))),true);
+      await shot('member-top','#signup');
+      await shot('member','#entry-linkage');
+      await linkageNotice.locator('summary').focus();
+      await page.keyboard.press('Enter');
+      assert.equal(await linkageNotice.evaluate(el => el.open),true);
+      await page.keyboard.press('Enter');
+      assert.equal(await linkageNotice.evaluate(el => el.open),false);
+      if (cups) {
+        for (const size of width === 390 ? [360,390,430] : [1440]) {
+          await page.setViewportSize({width:size,height:900});
+          await checkRetention();
+          assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth),false);
+        }
+        await page.setViewportSize({width,height:900});
+        await shot('member-submit','.form-summary');
+      }
       await fill();
       await page.click('#submit');
       assert.equal(await page.evaluate(() => document.activeElement.id),'linkage-consent');
+      assert.match(await page.textContent('#errors'),/회원 식별자 보관에 동의하거나 비회원으로 계속해 주세요/);
       await page.check('#linkage-consent');
       requireAgreement = true;
       await page.click('#submit');
@@ -135,6 +168,28 @@ try {
       assert.deepEqual(posts[2].body,posts[3].body);
       assert.equal(await page.evaluate(id => sessionStorage.getItem('seminar-pending-member:'+id),config.id),null);
       offer.open = offer.memberLinkageEnabled = true;
+      if (cups) {
+        for (const size of width === 390 ? [360,390,430] : [1440]) {
+          await page.setViewportSize({width:size,height:900});
+          await page.locator('#receipt').evaluate((receipt, size) => {
+            const {left,right} = receipt.getBoundingClientRect();
+            const rows = [...receipt.querySelectorAll('.ruled')];
+            if (rows.length !== 2) throw Error('Expected two receipt dividers');
+            for (const row of rows) {
+              const [label,value] = row.children;
+              const bounds = row.getBoundingClientRect();
+              if (bounds.left !== left || bounds.right !== right || getComputedStyle(row).borderTopWidth !== '1px' ||
+                  [label,value].some(cell => getComputedStyle(cell).borderTopWidth !== '0px')) {
+                throw Error(`Receipt divider does not span both columns at ${size}px`);
+              }
+            }
+            if (size === 360 && rows[1].lastElementChild.offsetHeight <= parseFloat(getComputedStyle(rows[1].lastElementChild).lineHeight)) {
+              throw Error('Expected the payment deadline to wrap');
+            }
+          },size);
+        }
+        await page.setViewportSize({width,height:900});
+      }
       await shot('success','#success');
       if (cups) await page.click('#new-signup'); else await page.reload();
       await page.waitForSelector('#entry-choice');
@@ -158,6 +213,8 @@ try {
       await page.fill('#name','입력 보존');
       await page.click('#entry-switch');
       assert.equal(await page.inputValue('#name'),'입력 보존');
+      assert.equal(await page.isVisible('#entry-linkage'),false);
+      assert.equal(await page.isVisible('#entry-mode'),true);
       await page.reload();
       await page.waitForSelector('#entry-mode');
       assert.equal(await page.evaluate(() => window.fixture.reads),0);
@@ -274,5 +331,6 @@ try {
       await page.close();
     }
     console.log(config.id+' entry, guest, member retry, handoff and receipts PASS (390, 1440)');
+    if (cups) console.log('cupsnballs retention and continuous receipt dividers PASS (360, 390, 430, 1440; wrapped deadline at 360)');
   }
 } finally { await browser.close(); }
